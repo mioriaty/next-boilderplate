@@ -1,6 +1,5 @@
 'use client';
 
-import { ValidationError } from '@/entities/errors/app-error';
 import { Button } from '@/libs/components/ui/button';
 import { Input } from '@/libs/components/ui/input';
 import { createUserUseCaseFactory } from '@/libs/factories/use-case-factory';
@@ -11,90 +10,64 @@ import { useForm } from 'react-hook-form';
 
 interface UserFormProps {
   onSubmit?: (data: UserFormData) => void;
-  isLoading?: boolean;
 }
 
-/**
- * User registration form component with Clean Architecture integration
- */
-export function UserForm({ onSubmit, isLoading = false }: UserFormProps) {
+export function UserForm({ onSubmit }: UserFormProps) {
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
-    reset
+    reset,
+    formState: { errors }
   } = useForm<UserFormData>({
     resolver: zodResolver(userSchema)
   });
 
-  const handleFormSubmit = async (data: UserFormData) => {
+  const createUser = createUserUseCaseFactory();
+
+  const onFormSubmit = async (data: UserFormData) => {
     try {
+      setIsLoading(true);
       setError(null);
       setSuccess(null);
 
-      const createUser = createUserUseCaseFactory();
-
-      const result = await createUser(data);
-
-      setSuccess(`User created successfully! ID: ${result.user.id}`);
+      await createUser(data);
+      setSuccess('User created successfully!');
       reset();
-
-      // Call parent onSubmit if provided
-      if (onSubmit) {
-        onSubmit(data);
-      }
+      onSubmit?.(data);
     } catch (err) {
-      if (err instanceof ValidationError) {
-        setError(err.message);
-      } else {
-        setError('An unexpected error occurred');
-      }
+      setError(err instanceof Error ? err.message : 'Failed to create user');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      {error && <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md">{error}</div>}
-
-      {success && <div className="p-3 text-sm text-green-600 bg-green-50 rounded-md">{success}</div>}
-
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
       <div>
-        <Input {...register('name')} placeholder="Enter your name" aria-describedby="name-error" />
-        {errors.name && (
-          <p id="name-error" className="mt-1 text-sm text-red-600">
-            {errors.name.message}
-          </p>
-        )}
+        <Input {...register('name')} placeholder="Enter your name" disabled={isLoading} />
+        {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>}
       </div>
 
       <div>
-        <Input {...register('email')} type="email" placeholder="Enter your email" aria-describedby="email-error" />
-        {errors.email && (
-          <p id="email-error" className="mt-1 text-sm text-red-600">
-            {errors.email.message}
-          </p>
-        )}
+        <Input {...register('email')} type="email" placeholder="Enter your email" disabled={isLoading} />
+        {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>}
       </div>
 
       <div>
-        <Input
-          {...register('password')}
-          type="password"
-          placeholder="Enter your password"
-          aria-describedby="password-error"
-        />
-        {errors.password && (
-          <p id="password-error" className="mt-1 text-sm text-red-600">
-            {errors.password.message}
-          </p>
-        )}
+        <Input {...register('password')} type="password" placeholder="Enter your password" disabled={isLoading} />
+        {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>}
       </div>
 
-      <Button type="submit" disabled={isLoading}>
-        {isLoading ? 'Submitting...' : 'Submit'}
+      {error && <p className="text-sm text-red-500">{error}</p>}
+
+      {success && <p className="text-sm text-green-500">{success}</p>}
+
+      <Button type="submit" disabled={isLoading} className="w-full">
+        {isLoading ? 'Creating...' : 'Create User'}
       </Button>
     </form>
   );

@@ -38,12 +38,14 @@ This project implements Clean Architecture with three main layers and pure funct
 
 ### 🟡 **Entities Layer** (`src/entities/`)
 
-- **Models** - Core business entities (User, etc.)
+- **Models** - Core business entities (User, Todo, etc.)
 - **Errors** - Custom error classes (AppError, ValidationError, etc.)
 
 ### 🔴 **Application Layer** (`src/application/`)
 
-- **Use Cases** - Pure function business logic (`create-user.use-case.ts`, `signin-user.use-case.ts`)
+- **Use Cases** - Pure function business logic organized by domain:
+  - `src/application/use-cases/todo/` - Todo-related use cases
+  - `src/application/use-cases/user/` - User-related use cases
 - **Interfaces** - Contracts for repositories and services
 
 ### 🔵 **Infrastructure Layer** (`src/infrastructure/`)
@@ -57,6 +59,7 @@ This project implements Clean Architecture with three main layers and pure funct
 - **Easy Testing** - No class instantiation, just function calls
 - **Type Safety** - Full TypeScript support with result types
 - **Predictable** - Same input always produces same output
+- **Organized** - Grouped by domain for better readability
 
 ### **Dependency Flow**
 
@@ -109,20 +112,30 @@ src/
 │   └── globals.css        # Global styles
 ├── entities/               # 🟡 Entities Layer
 │   ├── models/            # Business entity interfaces and types
-│   │   └── user.ts        # User entity and related types
+│   │   ├── user.ts        # User entity and related types
+│   │   └── todo.ts        # Todo entity and related types
 │   └── errors/            # Custom error classes
 │       └── app-error.ts   # Base error class and specific errors
 ├── application/            # 🔴 Application Layer
 │   ├── use-cases/         # Pure function business logic
-│   │   ├── create-user.use-case.ts    # Create user use case
-│   │   ├── signin-user.use-case.ts    # Signin user use case
-│   │   └── __tests__/     # Use case tests
+│   │   ├── todo/          # Todo domain use cases
+│   │   │   ├── create-todo.use-case.ts
+│   │   │   ├── get-todos.use-case.ts
+│   │   │   ├── update-todo.use-case.ts
+│   │   │   ├── delete-todo.use-case.ts
+│   │   │   ├── toggle-todo.use-case.ts
+│   │   │   └── __tests__/ # Todo use case tests
+│   │   └── user/          # User domain use cases
+│   │       ├── create-user.use-case.ts
+│   │       └── signin-user.use-case.ts
 │   └── interfaces/        # Repository and service contracts
 │       ├── user-repository.ts         # User repository interface
+│       ├── todo-repository.ts         # Todo repository interface
 │       └── auth-service.ts            # Auth service interface
 ├── infrastructure/         # 🔵 Infrastructure Layer
 │   ├── repositories/      # Data access implementations
-│   │   └── user-repository.ts        # User repository implementation
+│   │   ├── user-repository.ts        # User repository implementation
+│   │   └── todo-repository.ts        # Todo repository implementation
 │   └── services/          # External service implementations
 │       └── auth-service.ts            # Auth service implementation
 ├── libs/                  # Shared libraries and utilities
@@ -130,15 +143,23 @@ src/
 │   │   ├── ui/           # shadcn/ui components
 │   │   │   ├── button.tsx # Reusable button component
 │   │   │   ├── input.tsx  # Reusable input component
-│   │   │   └── card.tsx   # Reusable card component
-│   │   └── forms/        # Form components
-│   │       ├── user-form.tsx # User registration form
-│   │       └── __tests__/ # Form component tests
+│   │   │   ├── card.tsx   # Reusable card component
+│   │   │   ├── checkbox.tsx # Reusable checkbox component
+│   │   │   └── textarea.tsx # Reusable textarea component
+│   │   ├── forms/        # Form components
+│   │   │   ├── user-form.tsx # User registration form
+│   │   │   └── todo-form.tsx # Todo creation form
+│   │   └── todo/         # Todo-specific components
+│   │       ├── todo-item.tsx # Individual todo item
+│   │       └── todo-list.tsx # Todo list with filtering
 │   ├── factories/         # Factory pattern implementations
-│   │   └── use-case-factory.ts # Use case factories
+│   │   ├── use-case-factory.ts # User use case factories
+│   │   └── todo-factory.ts # Todo use case factories
 │   ├── hooks/            # Custom React hooks
 │   ├── utils/            # Utility functions
 │   └── validations/      # Zod validation schemas
+│       ├── user.validation.ts # User validation schemas
+│       └── todo-validations.ts # Todo validation schemas
 ├── stores/               # Global state management
 │   └── app.store.ts      # Zustand global state
 └── types/                # TypeScript type definitions
@@ -151,21 +172,20 @@ src/
 
 ```typescript
 // In your component
-const userRepository = new InMemoryUserRepository();
-const authService = new JwtAuthService();
+const todoRepository = new InMemoryTodoRepository();
 
-const result = await createUserUseCase({ userRepository, authService }, userData);
+const result = await createTodoUseCase({ todoRepository }, todoData);
 ```
 
 ### **Option 2: Factory Pattern (Recommended)**
 
 ```typescript
-// src/libs/factories/use-case-factory.ts
-import { createUserUseCaseFactory } from '@/libs/factories/use-case-factory';
+// src/libs/factories/todo-factory.ts
+import { createTodoUseCaseFactory } from '@/libs/factories/todo-factory';
 
 // Usage in component
-const createUser = createUserUseCaseFactory();
-const result = await createUser(userData);
+const createTodo = createTodoUseCaseFactory();
+const result = await createTodo(todoData);
 ```
 
 ### **Option 3: DI Container (For Complex Apps)**
@@ -183,10 +203,12 @@ const result = await createUser(userData);
 - **Dependency Injection** - Dependencies passed as parameters, not instantiated
 - **Interface Contracts** - Define interfaces in application layer
 - **Implementation Details** - Keep infrastructure concerns separate
+- **Domain Organization** - Group use cases by domain (todo/, user/)
 
 ### Code Organization
 
 - **File Naming** - Use cases follow `*.use-case.ts` pattern
+- **Domain Folders** - Group related use cases in domain folders
 - **Testing** - Test use cases as pure functions with mock dependencies
 - **Error Handling** - Use custom error classes from entities layer
 - **Type Safety** - Define clear interfaces and result types

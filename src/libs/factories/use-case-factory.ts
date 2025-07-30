@@ -1,5 +1,5 @@
-import { createUserUseCase } from '@/application/use-cases/create-user.use-case';
-import { signinUserUseCase } from '@/application/use-cases/signin-user.use-case';
+import { createUserUseCase } from '@/application/use-cases/user/create-user.use-case';
+import { signinUserUseCase } from '@/application/use-cases/user/signin-user.use-case';
 import { InMemoryUserRepository } from '@/infrastructure/repositories/user-repository';
 import { JwtAuthService } from '@/infrastructure/services/auth-service';
 

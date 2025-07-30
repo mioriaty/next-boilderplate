@@ -3,11 +3,20 @@ import userEvent from '@testing-library/user-event';
 
 import { UserForm } from '../user-form';
 
+// Mock the use case factory
+jest.mock('@/libs/factories/use-case-factory', () => ({
+  createUserUseCaseFactory: jest.fn(() => jest.fn())
+}));
+
 describe('UserForm', () => {
   const mockOnSubmit = jest.fn();
+  const mockCreateUser = jest.fn();
 
   beforeEach(() => {
     mockOnSubmit.mockClear();
+    mockCreateUser.mockClear();
+    // Mock the factory to return our mock function
+    jest.requireMock('@/libs/factories/use-case-factory').createUserUseCaseFactory.mockReturnValue(mockCreateUser);
   });
 
   it('renders form fields correctly', () => {
@@ -16,14 +25,14 @@ describe('UserForm', () => {
     expect(screen.getByPlaceholderText('Enter your name')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Enter your email')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Enter your password')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create User' })).toBeInTheDocument();
   });
 
   it('shows validation errors for invalid input', async () => {
     const user = userEvent.setup();
     render(<UserForm onSubmit={mockOnSubmit} />);
 
-    const submitButton = screen.getByRole('button', { name: 'Submit' });
+    const submitButton = screen.getByRole('button', { name: 'Create User' });
     await user.click(submitButton);
 
     await waitFor(() => {
@@ -41,7 +50,7 @@ describe('UserForm', () => {
     await user.type(screen.getByPlaceholderText('Enter your email'), 'john@example.com');
     await user.type(screen.getByPlaceholderText('Enter your password'), 'password123');
 
-    const submitButton = screen.getByRole('button', { name: 'Submit' });
+    const submitButton = screen.getByRole('button', { name: 'Create User' });
     await user.click(submitButton);
 
     await waitFor(() => {
@@ -53,10 +62,24 @@ describe('UserForm', () => {
     });
   });
 
-  it('disables submit button when loading', () => {
-    render(<UserForm onSubmit={mockOnSubmit} isLoading={true} />);
+  it('disables submit button when submitting', async () => {
+    // Mock the createUser to return a delayed promise
+    mockCreateUser.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
 
-    const submitButton = screen.getByRole('button', { name: 'Submitting...' });
-    expect(submitButton).toBeDisabled();
+    const user = userEvent.setup();
+    render(<UserForm onSubmit={mockOnSubmit} />);
+
+    // Fill form and submit to trigger loading state
+    await user.type(screen.getByPlaceholderText('Enter your name'), 'John Doe');
+    await user.type(screen.getByPlaceholderText('Enter your email'), 'john@example.com');
+    await user.type(screen.getByPlaceholderText('Enter your password'), 'password123');
+
+    const submitButton = screen.getByRole('button', { name: 'Create User' });
+    await user.click(submitButton);
+
+    // Wait for button to be disabled and show loading text
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Creating...' })).toBeDisabled();
+    });
   });
 });
