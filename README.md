@@ -1,6 +1,7 @@
 # Next.js Core App
 
-A modern Next.js application built with TypeScript, Tailwind CSS v3, shadcn/ui, and Clean Architecture principles with pure function use cases.
+A modern Next.js application built with TypeScript, Tailwind CSS v3, shadcn/ui, and Clean Architecture principles with
+pure function use cases.
 
 ## Features
 
@@ -103,26 +104,75 @@ pnpm format:check
 ```
 src/
 ├── app/                    # Next.js App Router pages
-├── components/             # UI components
-│   ├── ui/                # shadcn/ui components
-│   └── forms/             # Form components
+│   ├── layout.tsx         # Root layout component
+│   ├── page.tsx           # Home page component
+│   └── globals.css        # Global styles
 ├── entities/               # 🟡 Entities Layer
-│   ├── models/            # Business entities
+│   ├── models/            # Business entity interfaces and types
+│   │   └── user.ts        # User entity and related types
 │   └── errors/            # Custom error classes
+│       └── app-error.ts   # Base error class and specific errors
 ├── application/            # 🔴 Application Layer
 │   ├── use-cases/         # Pure function business logic
-│   │   ├── *.use-case.ts  # Use case implementations
+│   │   ├── create-user.use-case.ts    # Create user use case
+│   │   ├── signin-user.use-case.ts    # Signin user use case
 │   │   └── __tests__/     # Use case tests
-│   └── interfaces/        # Repository & service contracts
+│   └── interfaces/        # Repository and service contracts
+│       ├── user-repository.ts         # User repository interface
+│       └── auth-service.ts            # Auth service interface
 ├── infrastructure/         # 🔵 Infrastructure Layer
 │   ├── repositories/      # Data access implementations
+│   │   └── user-repository.ts        # User repository implementation
 │   └── services/          # External service implementations
-├── lib/                   # Utilities and DI container
-│   ├── di-container.ts    # Dependency injection
-│   ├── store.ts           # Zustand store
-│   ├── utils.ts           # Utility functions
-│   └── validations.ts     # Zod schemas
-└── types/                 # TypeScript type definitions
+│       └── auth-service.ts            # Auth service implementation
+├── libs/                  # Shared libraries and utilities
+│   ├── components/        # Reusable UI components
+│   │   ├── ui/           # shadcn/ui components
+│   │   │   ├── button.tsx # Reusable button component
+│   │   │   ├── input.tsx  # Reusable input component
+│   │   │   └── card.tsx   # Reusable card component
+│   │   └── forms/        # Form components
+│   │       ├── user-form.tsx # User registration form
+│   │       └── __tests__/ # Form component tests
+│   ├── factories/         # Factory pattern implementations
+│   │   └── use-case-factory.ts # Use case factories
+│   ├── hooks/            # Custom React hooks
+│   ├── utils/            # Utility functions
+│   └── validations/      # Zod validation schemas
+├── stores/               # Global state management
+│   └── app.store.ts      # Zustand global state
+└── types/                # TypeScript type definitions
+    └── jest.d.ts         # Jest DOM matchers
+```
+
+## Dependency Injection Approaches
+
+### **Option 1: Direct Instantiation (Simplest)**
+
+```typescript
+// In your component
+const userRepository = new InMemoryUserRepository();
+const authService = new JwtAuthService();
+
+const result = await createUserUseCase({ userRepository, authService }, userData);
+```
+
+### **Option 2: Factory Pattern (Recommended)**
+
+```typescript
+// src/libs/factories/use-case-factory.ts
+import { createUserUseCaseFactory } from '@/libs/factories/use-case-factory';
+
+// Usage in component
+const createUser = createUserUseCaseFactory();
+const result = await createUser(userData);
+```
+
+### **Option 3: DI Container (For Complex Apps)**
+
+```typescript
+// Only use when you have many dependencies and complex wiring
+// Consider using a library like InversifyJS or Awilix
 ```
 
 ## Development Guidelines

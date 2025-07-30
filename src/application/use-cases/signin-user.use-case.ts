@@ -1,8 +1,8 @@
 // src/application/use-cases/signin-user.use-case.ts
-import { UserRepository } from '@/application/interfaces/user-repository'
-import { AuthService } from '@/application/interfaces/auth-service'
-import { UserCredentials, User } from '@/entities/models/user'
-import { ValidationError, UnauthorizedError } from '@/entities/errors/app-error'
+import { UserRepository } from '@/application/interfaces/user-repository';
+import { AuthService } from '@/application/interfaces/auth-service';
+import { UserCredentials, User } from '@/entities/models/user';
+import { ValidationError, UnauthorizedError } from '@/entities/errors/app-error';
 
 export interface SigninUserDependencies {
 	userRepository: UserRepository
@@ -23,17 +23,17 @@ export async function signinUserUseCase(
 ): Promise<SigninUserResult> {
 	// Validate input
 	if (!credentials.email || !isValidEmail(credentials.email)) {
-		throw new ValidationError('Invalid email address')
+		throw new ValidationError('Invalid email address');
 	}
 
 	if (!credentials.password) {
-		throw new ValidationError('Password is required')
+		throw new ValidationError('Password is required');
 	}
 
 	// Find user by email
-	const user = await dependencies.userRepository.findByEmail(credentials.email)
+	const user = await dependencies.userRepository.findByEmail(credentials.email);
 	if (!user) {
-		throw new UnauthorizedError('Invalid email or password')
+		throw new UnauthorizedError('Invalid email or password');
 	}
 
 	// Verify password (assuming we have a way to get hashed password)
@@ -41,19 +41,19 @@ export async function signinUserUseCase(
 	const isValidPassword = await dependencies.authService.comparePassword(
 		credentials.password,
 		user.password || ''
-	)
+	);
 
 	if (!isValidPassword) {
-		throw new UnauthorizedError('Invalid email or password')
+		throw new UnauthorizedError('Invalid email or password');
 	}
 
 	// Generate token
-	const token = await dependencies.authService.generateToken(user)
+	const token = await dependencies.authService.generateToken(user);
 
-	return { user, token }
+	return { user, token };
 }
 
 function isValidEmail(email: string): boolean {
-	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-	return emailRegex.test(email)
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	return emailRegex.test(email);
 }

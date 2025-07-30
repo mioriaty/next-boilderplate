@@ -1,6 +1,6 @@
 // src/lib/store.ts
-import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
 
 interface AppState {
 	isLoading: boolean
@@ -20,10 +20,10 @@ export const useAppStore = create<AppState>()(
 			error: null,
 			setLoading: loading => set({ isLoading: loading }),
 			setError: error => set({ error }),
-			clearError: () => set({ error: null }),
+			clearError: () => set({ error: null })
 		}),
 		{
-			name: 'app-store',
+			name: 'app-store'
 		}
 	)
-)
+);

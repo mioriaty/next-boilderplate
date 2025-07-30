@@ -40,14 +40,6 @@ This comprehensive guide outlines best practices, conventions, and standards for
     │   ├── layout.tsx         # Root layout component
     │   ├── page.tsx           # Home page component
     │   └── globals.css        # Global styles
-    ├── components/             # UI components
-    │   ├── ui/                # shadcn/ui components
-    │   │   ├── button.tsx     # Reusable button component
-    │   │   ├── input.tsx      # Reusable input component
-    │   │   └── card.tsx       # Reusable card component
-    │   └── forms/             # Form components
-    │       ├── user-form.tsx  # User registration form
-    │       └── __tests__/     # Form component tests
     ├── entities/               # 🟡 Entities Layer
     │   ├── models/            # Business entity interfaces and types
     │   │   └── user.ts        # User entity and related types
@@ -66,21 +58,35 @@ This comprehensive guide outlines best practices, conventions, and standards for
     │   │   └── user-repository.ts        # User repository implementation
     │   └── services/          # External service implementations
     │       └── auth-service.ts            # Auth service implementation
-    ├── lib/                   # Utilities and DI container
-    │   ├── di-container.ts    # Dependency injection container
-    │   ├── store.ts           # Zustand global state
-    │   ├── utils.ts           # Utility functions
-    │   └── validations.ts     # Zod validation schemas
-    └── types/                 # TypeScript type definitions
-        └── jest.d.ts          # Jest DOM matchers
+    ├── libs/                  # Shared libraries and utilities
+    │   ├── components/        # Reusable UI components
+    │   │   ├── ui/           # shadcn/ui components
+    │   │   │   ├── button.tsx # Reusable button component
+    │   │   │   ├── input.tsx  # Reusable input component
+    │   │   │   └── card.tsx   # Reusable card component
+    │   │   └── forms/        # Form components
+    │   │       ├── user-form.tsx # User registration form
+    │   │       └── __tests__/ # Form component tests
+    │   ├── factories/         # Factory pattern implementations
+    │   │   └── use-case-factory.ts # Use case factories
+    │   ├── hooks/            # Custom React hooks
+    │   ├── utils/            # Utility functions
+    │   └── validations/      # Zod validation schemas
+    ├── stores/               # Global state management
+    │   └── app.store.ts      # Zustand global state
+    └── types/                # TypeScript type definitions
+        └── jest.d.ts         # Jest DOM matchers
 
     File Organization Rules
     - Keep related files together in logical directories
     - Use descriptive directory names that reflect their purpose
     - Group test files in `__tests__` directories within their respective modules
-    - Place shared utilities in `src/lib/`
+    - Place shared utilities in `src/libs/`
     - Keep components focused on UI concerns only
     - Delegate business logic to use cases in the application layer
+    - Organize shared libraries in `src/libs/` with clear subdirectories
+    - Keep global state in `src/stores/`
+    - Use factory pattern for dependency injection (src/libs/factories/)
 
     Layer Dependencies
     - Entities layer has no dependencies on other layers
@@ -97,6 +103,12 @@ This comprehensive guide outlines best practices, conventions, and standards for
     - Return structured results with proper typing
     - Handle errors with custom error classes
     - Test use cases as pure functions with mock dependencies
+    - Use factory pattern for dependency wiring (recommended approach)
+
+    Dependency Injection Approaches
+    - Use Factory Pattern for most cases (src/libs/factories/)
+    - Direct instantiation for simple cases
+    - Avoid complex DI containers unless necessary for large applications
 
     File Naming Conventions
     - Use cases: *.use-case.ts (e.g., create-user.use-case.ts)
@@ -106,6 +118,8 @@ This comprehensive guide outlines best practices, conventions, and standards for
     - Tests: *.test.ts (e.g., create-user.use-case.test.ts)
     - Components: *.tsx (e.g., user-form.tsx)
     - Utilities: *.ts (e.g., utils.ts)
+    - Stores: *.store.ts (e.g., app.store.ts)
+    - Factories: *.factory.ts (e.g., use-case-factory.ts)
 
     Naming Conventions
     General Rules

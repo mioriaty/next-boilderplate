@@ -1,5 +1,5 @@
 // src/application/interfaces/auth-service.ts
-import { User } from '@/entities/models/user'
+import { User } from '@/entities/models/user';
 
 export interface AuthService {
 	hashPassword(password: string): Promise<string>

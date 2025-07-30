@@ -1,5 +1,5 @@
 // src/application/interfaces/user-repository.ts
-import { User, CreateUserData, UserCredentials } from '@/entities/models/user'
+import { User, CreateUserData, UserCredentials } from '@/entities/models/user';
 
 export interface UserRepository {
 	create(data: CreateUserData): Promise<User>
