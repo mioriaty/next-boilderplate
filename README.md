@@ -1,7 +1,7 @@
 # Next.js Core App
 
-A modern Next.js application built with TypeScript, Tailwind CSS v3, shadcn/ui, and Clean Architecture principles with
-pure function use cases.
+A modern Next.js application built with TypeScript, Tailwind CSS v3, shadcn/ui, and a simplified hybrid architecture
+that balances Clean Architecture principles with practical development needs.
 
 ## Features
 
@@ -9,7 +9,7 @@ pure function use cases.
 - **TypeScript** for type safety
 - **Tailwind CSS v3** for styling
 - **shadcn/ui** for consistent, accessible components
-- **Clean Architecture** with three layers and pure function use cases
+- **Hybrid Architecture** - Feature-based organization with shared utilities
 - **Zustand** for state management
 - **React Hook Form** with Zod validation
 - **Jest & Testing Library** for testing
@@ -24,7 +24,7 @@ pure function use cases.
 - TypeScript
 - Tailwind CSS v3
 - shadcn/ui
-- Clean Architecture
+- Hybrid Architecture
 - Zustand
 - React Hook Form
 - Zod
@@ -32,40 +32,87 @@ pure function use cases.
 - Radix UI
 - Prettier
 
-## Clean Architecture
+## Hybrid Architecture
 
-This project implements Clean Architecture with three main layers and pure function use cases:
+This project uses a hybrid architecture that combines feature-based organization with shared utilities:
 
-### 🟡 **Entities Layer** (`src/entities/`)
-
-- **Models** - Core business entities (User, Todo, etc.)
-- **Errors** - Custom error classes (AppError, ValidationError, etc.)
-
-### 🔴 **Application Layer** (`src/application/`)
-
-- **Use Cases** - Pure function business logic organized by domain:
-  - `src/application/use-cases/todo/` - Todo-related use cases
-  - `src/application/use-cases/user/` - User-related use cases
-- **Interfaces** - Contracts for repositories and services
-
-### 🔵 **Infrastructure Layer** (`src/infrastructure/`)
-
-- **Repositories** - Data access implementations
-- **Services** - External service implementations (Auth, etc.)
-
-### **Pure Function Use Cases**
-
-- **Dependency Injection** - Dependencies passed as parameters
-- **Easy Testing** - No class instantiation, just function calls
-- **Type Safety** - Full TypeScript support with result types
-- **Predictable** - Same input always produces same output
-- **Organized** - Grouped by domain for better readability
-
-### **Dependency Flow**
+### 🏗️ **Project Structure**
 
 ```
-UI Components → Pure Functions → Dependencies ← Implementations
+src/
+├── app/                    # Next.js App Router
+│   ├── layout.tsx         # Root layout component
+│   ├── page.tsx           # Home page component
+│   └── globals.css        # Global styles
+├── features/              # Feature-based organization
+│   ├── todos/             # Todo feature
+│   │   ├── components/    # Todo-specific components
+│   │   ├── services/      # Todo business logic
+│   │   ├── store.ts       # Todo state management
+│   │   ├── types.ts       # Todo type definitions
+│   │   └── validations.ts # Todo validation schemas
+│   └── users/             # User feature
+│       ├── components/    # User-specific components
+│       ├── services/      # User business logic
+│       ├── store.ts       # User state management
+│       ├── types.ts       # User type definitions
+│       └── validations.ts # User validation schemas
+├── shared/                # Shared utilities and components
+│   ├── components/        # Reusable UI components
+│   │   ├── ui/           # shadcn/ui components
+│   │   └── forms/        # Form components
+│   ├── hooks/            # Custom React hooks
+│   ├── utils/            # Utility functions
+│   └── validations/      # Shared validation schemas
+├── services/              # Data access and external services
+│   ├── repositories/      # Data access implementations
+│   └── interfaces/        # Service contracts
+├── models/                # Core business models and types
+│   ├── todo.ts           # Todo entity
+│   ├── user.ts           # User entity
+│   └── errors/           # Custom error classes
+├── stores/                # Global state management
+└── types/                 # Global TypeScript definitions
 ```
+
+### 🎯 **Architecture Principles**
+
+- **Feature-First**: Each feature is self-contained with its own components, services, and state
+- **Shared Utilities**: Common code is centralized in `shared/`
+- **Clean Separation**: Business logic in services, UI in components
+- **Type Safety**: Comprehensive TypeScript usage throughout
+- **Pure Functions**: Business logic implemented as pure functions
+- **Dependency Injection**: Services accept dependencies as parameters
+
+### 📁 **Directory Guidelines**
+
+#### **Features** (`src/features/`)
+
+- **Self-contained**: Each feature has everything it needs
+- **Components**: Feature-specific UI components
+- **Services**: Business logic and data access
+- **Store**: Feature-specific state management
+- **Types**: Feature-specific type definitions
+- **Validations**: Feature-specific validation schemas
+
+#### **Shared** (`src/shared/`)
+
+- **Components**: Reusable UI components (shadcn/ui, forms)
+- **Hooks**: Custom React hooks used across features
+- **Utils**: Utility functions and helpers
+- **Validations**: Shared validation schemas
+
+#### **Services** (`src/services/`)
+
+- **Repositories**: Data access implementations
+- **Interfaces**: Service contracts and types
+- **External APIs**: Third-party service integrations
+
+#### **Models** (`src/models/`)
+
+- **Entities**: Core business models (User, Todo)
+- **Errors**: Custom error classes
+- **Types**: Global type definitions
 
 ## Getting Started
 
@@ -102,130 +149,78 @@ pnpm format
 pnpm format:check
 ```
 
-## Project Structure
-
-```
-src/
-├── app/                    # Next.js App Router pages
-│   ├── layout.tsx         # Root layout component
-│   ├── page.tsx           # Home page component
-│   └── globals.css        # Global styles
-├── entities/               # 🟡 Entities Layer
-│   ├── models/            # Business entity interfaces and types
-│   │   ├── user.ts        # User entity and related types
-│   │   └── todo.ts        # Todo entity and related types
-│   └── errors/            # Custom error classes
-│       └── app-error.ts   # Base error class and specific errors
-├── application/            # 🔴 Application Layer
-│   ├── use-cases/         # Pure function business logic
-│   │   ├── todo/          # Todo domain use cases
-│   │   │   ├── create-todo.use-case.ts
-│   │   │   ├── get-todos.use-case.ts
-│   │   │   ├── update-todo.use-case.ts
-│   │   │   ├── delete-todo.use-case.ts
-│   │   │   ├── toggle-todo.use-case.ts
-│   │   │   └── __tests__/ # Todo use case tests
-│   │   └── user/          # User domain use cases
-│   │       ├── create-user.use-case.ts
-│   │       └── signin-user.use-case.ts
-│   └── interfaces/        # Repository and service contracts
-│       ├── user-repository.ts         # User repository interface
-│       ├── todo-repository.ts         # Todo repository interface
-│       └── auth-service.ts            # Auth service interface
-├── infrastructure/         # 🔵 Infrastructure Layer
-│   ├── repositories/      # Data access implementations
-│   │   ├── user-repository.ts        # User repository implementation
-│   │   └── todo-repository.ts        # Todo repository implementation
-│   └── services/          # External service implementations
-│       └── auth-service.ts            # Auth service implementation
-├── libs/                  # Shared libraries and utilities
-│   ├── components/        # Reusable UI components
-│   │   ├── ui/           # shadcn/ui components
-│   │   │   ├── button.tsx # Reusable button component
-│   │   │   ├── input.tsx  # Reusable input component
-│   │   │   ├── card.tsx   # Reusable card component
-│   │   │   ├── checkbox.tsx # Reusable checkbox component
-│   │   │   └── textarea.tsx # Reusable textarea component
-│   │   ├── forms/        # Form components
-│   │   │   ├── user-form.tsx # User registration form
-│   │   │   └── todo-form.tsx # Todo creation form
-│   │   └── todo/         # Todo-specific components
-│   │       ├── todo-item.tsx # Individual todo item
-│   │       └── todo-list.tsx # Todo list with filtering
-│   ├── factories/         # Factory pattern implementations
-│   │   ├── use-case-factory.ts # User use case factories
-│   │   └── todo-factory.ts # Todo use case factories
-│   ├── hooks/            # Custom React hooks
-│   ├── utils/            # Utility functions
-│   └── validations/      # Zod validation schemas
-│       ├── user.validation.ts # User validation schemas
-│       └── todo-validations.ts # Todo validation schemas
-├── stores/               # Global state management
-│   └── app.store.ts      # Zustand global state
-└── types/                # TypeScript type definitions
-    └── jest.d.ts         # Jest DOM matchers
-```
-
-## Dependency Injection Approaches
-
-### **Option 1: Direct Instantiation (Simplest)**
-
-```typescript
-// In your component
-const todoRepository = new InMemoryTodoRepository();
-
-const result = await createTodoUseCase({ todoRepository }, todoData);
-```
-
-### **Option 2: Factory Pattern (Recommended)**
-
-```typescript
-// src/libs/factories/todo-factory.ts
-import { createTodoUseCaseFactory } from '@/libs/factories/todo-factory';
-
-// Usage in component
-const createTodo = createTodoUseCaseFactory();
-const result = await createTodo(todoData);
-```
-
-### **Option 3: DI Container (For Complex Apps)**
-
-```typescript
-// Only use when you have many dependencies and complex wiring
-// Consider using a library like InversifyJS or Awilix
-```
-
 ## Development Guidelines
 
-### Clean Architecture Principles
+### Feature Development
 
-- **Pure Functions** - Use cases are pure functions with dependencies injected
-- **Dependency Injection** - Dependencies passed as parameters, not instantiated
-- **Interface Contracts** - Define interfaces in application layer
-- **Implementation Details** - Keep infrastructure concerns separate
-- **Domain Organization** - Group use cases by domain (todo/, user/)
+1. **Create Feature Structure**:
+
+   ```bash
+   src/features/your-feature/
+   ├── components/
+   ├── services/
+   ├── store.ts
+   ├── types.ts
+   └── validations.ts
+   ```
+
+2. **Implement Business Logic**:
+
+   ```typescript
+   // src/features/todos/services/create-todo.use-case.ts
+   export async function createTodoUseCase(
+     dependencies: { todoRepository: TodoRepository },
+     data: CreateTodoInput
+   ): Promise<Result<Todo, AppError>> {
+     // Pure function implementation
+   }
+   ```
+
+3. **Add State Management**:
+
+   ```typescript
+   // src/features/todos/store.ts
+   export const useTodoStore = create<TodoStore>((set) => ({
+     // State and actions
+   }));
+   ```
+
+4. **Create Components**:
+   ```typescript
+   // src/features/todos/components/todo-form.tsx
+   export function TodoForm() {
+     // Component implementation
+   }
+   ```
 
 ### Code Organization
 
-- **File Naming** - Use cases follow `*.use-case.ts` pattern
-- **Domain Folders** - Group related use cases in domain folders
-- **Testing** - Test use cases as pure functions with mock dependencies
-- **Error Handling** - Use custom error classes from entities layer
-- **Type Safety** - Define clear interfaces and result types
+- **File Naming**: Use kebab-case for files, camelCase for functions
+- **Component Naming**: Use PascalCase for components
+- **Type Definitions**: Place in `types.ts` within each feature
+- **Validation**: Use Zod schemas in `validations.ts`
+- **Testing**: Place tests next to the files they test
+
+### State Management
+
+- **Feature Stores**: Use Zustand for feature-specific state
+- **Global State**: Use shared stores for cross-feature state
+- **Server State**: Use React Query or SWR for server state
+- **Form State**: Use React Hook Form for form state
 
 ### Testing Strategy
 
-- **Unit Tests** - Test use cases as pure functions
-- **Mock Dependencies** - Easy to mock repositories and services
-- **Isolated Testing** - Test business logic without infrastructure
-- **Comprehensive Coverage** - Test all validation and error scenarios
+- **Unit Tests**: Test services as pure functions
+- **Component Tests**: Test UI components with React Testing Library
+- **Integration Tests**: Test feature workflows
+- **Mock Dependencies**: Use dependency injection for easy mocking
 
 ### Code Style
 
 - Follow TypeScript best practices
 - Use functional programming patterns
-- Implement proper error handling with custom error classes
-- Write comprehensive tests for use cases
+- Implement proper error handling
+- Write comprehensive tests
 - Follow accessibility guidelines
 - Use semantic HTML
 - Implement responsive design
@@ -255,11 +250,13 @@ pnpm test:coverage
 
 ## Contributing
 
-1. Follow Clean Architecture principles with pure function use cases
-2. Write tests for use cases as pure functions
-3. Ensure accessibility compliance
-4. Update documentation as needed
-5. Format code before committing
+1. Follow the hybrid architecture principles
+2. Keep features self-contained
+3. Share common code in `shared/`
+4. Write tests for business logic and components
+5. Ensure accessibility compliance
+6. Update documentation as needed
+7. Format code before committing
 
 ## License
 

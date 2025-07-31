@@ -1,0 +1,310 @@
+# Architecture Documentation
+
+## Overview
+
+This project uses a **Hybrid Architecture** that combines feature-based organization with shared utilities. This
+approach balances Clean Architecture principles with practical development needs for medium-sized projects.
+
+## Architecture Principles
+
+### 🎯 **Core Principles**
+
+1. **Feature-First Organization**: Each feature is self-contained with its own components, services, and state
+2. **Shared Utilities**: Common code is centralized in `shared/` for reuse across features
+3. **Clean Separation**: Business logic in services, UI in components
+4. **Type Safety**: Comprehensive TypeScript usage throughout
+5. **Pure Functions**: Business logic implemented as pure functions with dependency injection
+6. **Scalable Structure**: Easy to add new features without affecting existing ones
+
+### 🏗️ **Directory Structure**
+
+```
+src/
+├── app/                    # Next.js App Router
+├── features/              # Feature-based organization
+│   ├── todos/             # Todo feature
+│   └── users/             # User feature
+├── shared/                # Shared utilities and components
+├── services/              # Data access and external services
+├── models/                # Core business models and types
+├── stores/                # Global state management
+└── types/                 # Global TypeScript definitions
+```
+
+## Detailed Structure
+
+### 📁 **Features** (`src/features/`)
+
+Each feature is self-contained and includes:
+
+```
+features/todos/
+├── components/            # Feature-specific UI components
+│   ├── todo-item.tsx
+│   ├── todo-list.tsx
+│   └── todo-form.tsx
+├── services/              # Business logic and data access
+│   ├── create-todo.use-case.ts
+│   ├── get-todos.use-case.ts
+│   ├── update-todo.use-case.ts
+│   └── delete-todo.use-case.ts
+├── store.ts              # Feature-specific state management
+├── types.ts              # Feature-specific type definitions
+└── validations.ts        # Feature-specific validation schemas
+```
+
+**Guidelines:**
+
+- Keep features self-contained
+- Use descriptive file names
+- Group related functionality together
+- Test each feature independently
+
+### 📁 **Shared** (`src/shared/`)
+
+Common utilities used across features:
+
+```
+shared/
+├── components/            # Reusable UI components
+│   ├── ui/               # shadcn/ui components
+│   └── forms/            # Form components
+├── hooks/                # Custom React hooks
+├── utils/                # Utility functions
+└── validations/          # Shared validation schemas
+```
+
+**Guidelines:**
+
+- Only add code that's used by multiple features
+- Keep utilities generic and reusable
+- Document complex utilities
+- Test shared code thoroughly
+
+### 📁 **Services** (`src/services/`)
+
+Data access and external service integrations:
+
+```
+services/
+├── repositories/          # Data access implementations
+│   ├── todo-repository.ts
+│   └── user-repository.ts
+└── interfaces/            # Service contracts
+    ├── todo-repository.ts
+    └── user-repository.ts
+```
+
+**Guidelines:**
+
+- Implement repository pattern for data access
+- Use interfaces for service contracts
+- Keep external API calls isolated
+- Handle errors consistently
+
+### 📁 **Models** (`src/models/`)
+
+Core business models and types:
+
+```
+models/
+├── todo.ts               # Todo entity
+├── user.ts               # User entity
+└── errors/               # Custom error classes
+    └── app-error.ts
+```
+
+**Guidelines:**
+
+- Define core business entities
+- Use TypeScript interfaces for type safety
+- Create custom error classes for domain errors
+- Keep models simple and focused
+
+## Development Patterns
+
+### 🔧 **Feature Development Pattern**
+
+1. **Create Feature Structure**:
+
+   ```bash
+   mkdir -p src/features/new-feature/{components,services}
+   touch src/features/new-feature/{store,types,validations}.ts
+   ```
+
+2. **Define Types**:
+
+   ```typescript
+   // src/features/new-feature/types.ts
+   export interface NewFeatureData {
+     id: string;
+     name: string;
+     // ... other properties
+   }
+   ```
+
+3. **Create Validation Schemas**:
+
+   ```typescript
+   // src/features/new-feature/validations.ts
+   import { z } from 'zod';
+
+   export const newFeatureSchema = z.object({
+     name: z.string().min(1, 'Name is required')
+     // ... other validations
+   });
+   ```
+
+4. **Implement Business Logic**:
+
+   ```typescript
+   // src/features/new-feature/services/create-new-feature.use-case.ts
+   export async function createNewFeatureUseCase(
+     dependencies: { repository: NewFeatureRepository },
+     data: CreateNewFeatureInput
+   ): Promise<Result<NewFeature, AppError>> {
+     // Pure function implementation
+   }
+   ```
+
+5. **Add State Management**:
+
+   ```typescript
+   // src/features/new-feature/store.ts
+   export const useNewFeatureStore = create<NewFeatureStore>((set) => ({
+     // State and actions
+   }));
+   ```
+
+6. **Create Components**:
+   ```typescript
+   // src/features/new-feature/components/new-feature-form.tsx
+   export function NewFeatureForm() {
+     // Component implementation
+   }
+   ```
+
+### 🎯 **Service Pattern**
+
+```typescript
+// Pure function with dependency injection
+export async function createTodoUseCase(
+  dependencies: { todoRepository: TodoRepository },
+  data: CreateTodoInput
+): Promise<Result<Todo, AppError>> {
+  try {
+    // Validate input
+    const validatedData = createTodoSchema.parse(data);
+
+    // Business logic
+    const todo = await dependencies.todoRepository.create(validatedData);
+
+    return { success: true, data: todo };
+  } catch (error) {
+    return { success: false, error: handleError(error) };
+  }
+}
+```
+
+### 🔄 **State Management Pattern**
+
+```typescript
+// Feature-specific store
+export const useTodoStore = create<TodoStore>((set, get) => ({
+  todos: [],
+  isLoading: false,
+  error: null,
+
+  // Actions
+  setTodos: (todos) => set({ todos }),
+  addTodo: (todo) =>
+    set((state) => ({
+      todos: [...state.todos, todo]
+    }))
+  // ... other actions
+}));
+```
+
+### 🧪 **Testing Pattern**
+
+```typescript
+// Test business logic as pure functions
+describe('createTodoUseCase', () => {
+  it('should create a todo successfully', async () => {
+    const mockRepository = {
+      create: jest.fn().mockResolvedValue(mockTodo)
+    };
+
+    const result = await createTodoUseCase({ todoRepository: mockRepository }, validTodoData);
+
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual(mockTodo);
+  });
+});
+```
+
+## Migration Guide
+
+### From Clean Architecture to Hybrid
+
+1. **Move Use Cases**: `src/application/use-cases/todo/` → `src/features/todos/services/`
+2. **Move Components**: `src/libs/components/todo/` → `src/features/todos/components/`
+3. **Move Shared Code**: `src/libs/` → `src/shared/`
+4. **Move Models**: `src/entities/models/` → `src/models/`
+5. **Update Imports**: Update all import paths to reflect new structure
+
+### Benefits of Migration
+
+- **Simplified Navigation**: Easier to find feature-related code
+- **Better Scalability**: New features don't affect existing ones
+- **Reduced Complexity**: Less abstraction layers
+- **Improved Developer Experience**: More intuitive structure
+
+## Best Practices
+
+### ✅ **Do's**
+
+- Keep features self-contained
+- Use shared utilities for common code
+- Implement pure functions for business logic
+- Use TypeScript for type safety
+- Write comprehensive tests
+- Follow consistent naming conventions
+- Document complex business logic
+
+### ❌ **Don'ts**
+
+- Don't create deep nesting
+- Don't duplicate code across features
+- Don't mix UI and business logic
+- Don't skip error handling
+- Don't ignore TypeScript errors
+- Don't forget to test shared utilities
+
+## Scaling Considerations
+
+### **Small Projects** (< 5 features)
+
+- Use the current structure as-is
+- Keep everything simple
+
+### **Medium Projects** (5-15 features)
+
+- Consider grouping related features
+- Add feature-specific documentation
+
+### **Large Projects** (> 15 features)
+
+- Consider domain-based grouping
+- Add architectural documentation
+- Implement stricter guidelines
+
+## Conclusion
+
+The hybrid architecture provides a balanced approach that:
+
+- Maintains Clean Architecture principles
+- Simplifies development for medium projects
+- Scales well as the project grows
+- Provides clear separation of concerns
+- Enables easy testing and maintenance
