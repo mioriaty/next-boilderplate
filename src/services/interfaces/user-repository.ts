@@ -1,3 +1,4 @@
+// src/services/interfaces/user-repository.ts
 import { CreateUserData, User, UserCredentials } from '@/models/user';
 
 export interface UserRepository {

@@ -1,5 +1,7 @@
+// src/features/todo/store.ts
 import { TodoFilters } from '@/features/todo/types';
 import { Todo } from '@/models/todo';
+import { todoService } from '@/services/todo-service';
 import { create } from 'zustand';
 
 interface TodoState {
@@ -21,6 +23,13 @@ interface TodoActions {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
+
+  // Service methods
+  fetchTodos: () => Promise<void>;
+  createTodo: (title: string, description?: string) => Promise<void>;
+  updateTodoById: (id: string, updates: Partial<Todo>) => Promise<void>;
+  deleteTodoById: (id: string) => Promise<void>;
+  toggleTodoById: (id: string) => Promise<void>;
 }
 
 type TodoStore = TodoState & TodoActions;
@@ -81,7 +90,78 @@ export const useTodoStore = create<TodoStore>((set, get) => ({
 
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error }),
-  clearError: () => set({ error: null })
+  clearError: () => set({ error: null }),
+
+  // Service methods that use the service factory
+  fetchTodos: async () => {
+    const { setLoading, setError, setTodos } = get();
+    try {
+      setLoading(true);
+      setError(null);
+      const todos = await todoService.getTodos();
+      setTodos(todos);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to fetch todos');
+    } finally {
+      setLoading(false);
+    }
+  },
+
+  createTodo: async (title: string, description?: string) => {
+    const { setLoading, setError, addTodo } = get();
+    try {
+      setLoading(true);
+      setError(null);
+      const todo = await todoService.createTodo({ title, description });
+      addTodo(todo);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to create todo');
+    } finally {
+      setLoading(false);
+    }
+  },
+
+  updateTodoById: async (id: string, updates: Partial<Todo>) => {
+    const { setLoading, setError, updateTodo } = get();
+    try {
+      setLoading(true);
+      setError(null);
+      const updatedTodo = await todoService.updateTodo(id, updates);
+      updateTodo(id, updatedTodo);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to update todo');
+    } finally {
+      setLoading(false);
+    }
+  },
+
+  deleteTodoById: async (id: string) => {
+    const { setLoading, setError, deleteTodo } = get();
+    try {
+      setLoading(true);
+      setError(null);
+      await todoService.deleteTodo(id);
+      deleteTodo(id);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to delete todo');
+    } finally {
+      setLoading(false);
+    }
+  },
+
+  toggleTodoById: async (id: string) => {
+    const { setLoading, setError, toggleTodo } = get();
+    try {
+      setLoading(true);
+      setError(null);
+      const updatedTodo = await todoService.toggleTodo(id);
+      toggleTodo(id);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to toggle todo');
+    } finally {
+      setLoading(false);
+    }
+  }
 }));
 
 // Helper function to filter todos
