@@ -1,3 +1,7 @@
+---
+alwaysApply: true
+---
+
 # base-rules
 
 ## Hybrid Architecture Best Practices (Medium Project)
@@ -16,6 +20,82 @@
 ```
 src/
 ├── app/                    # Next.js App Router
+├── features/              # Feature-based organization
+│   ├── todos/             # Todo feature (self-contained)
+│   └── users/             # User feature (self-contained)
+├── shared/                # Shared utilities and components
+├── services/              # Data access and external services
+├── models/                # Core business models and types
+├── stores/                # Global state management
+└── types/                 # Global TypeScript definitions
+```
+
+#### Feature Example
+```
+src/features/todos/
+├── components/            # Feature-specific UI components
+├── services/              # Business logic and data access
+├── store.ts               # Feature-specific state management
+├── types.ts               # Feature-specific type definitions
+└── validations.ts         # Feature-specific validation schemas
+```
+
+### Guidelines
+- **Feature-First**: All code for a feature lives together
+- **Shared Utilities**: Only put code in `shared/` if used by multiple features
+- **Business Logic**: Implement as pure functions, use dependency injection for repositories/services
+- **State Management**: Use Zustand for feature and global state
+- **Validation**: Use Zod for schemas, colocate with feature
+- **Testing**: Place tests next to the files they test
+- **Naming**: Use kebab-case for files, PascalCase for components, camelCase for functions/variables
+- **Type Safety**: Use TypeScript interfaces/types everywhere
+- **Error Handling**: Use custom error classes in `models/errors/`
+- **Documentation**: Keep README and ARCHITECTURE.md up to date with structure and patterns
+- **File Headers**: Do NOT add file path comments at the top of files - they are unnecessary and create clutter
+
+### Do's
+- Keep features self-contained
+- Use shared utilities for common code
+- Write pure functions for business logic
+- Use dependency injection for testability
+- Write comprehensive tests
+- Follow consistent naming conventions
+- Document complex business logic
+
+### Don'ts
+- Don't create deep nesting or excessive abstraction
+- Don't duplicate code across features
+- Don't mix UI and business logic
+- Don't skip error handling
+- Don't ignore TypeScript errors
+- Don't forget to test shared utilities
+- Don't add file path comments at the top of files
+
+### Scaling
+- For small projects: keep everything simple, use this structure as-is
+- For medium projects: group related features, add feature-specific docs
+- For large projects: consider domain-based grouping, stricter guidelines, and more documentation
+
+    - Use proper headings
+    - Use proper lists
+# base-rules
+
+## Hybrid Architecture Best Practices (Medium Project)
+
+### Philosophy
+- Organize code by feature first, not by technical type
+- Keep features self-contained: UI, business logic, state, types, and validation together
+- Centralize shared code in `src/shared/`
+- Use Clean Architecture principles where practical, but avoid unnecessary abstraction
+- Prefer pure functions for business logic and dependency injection for testability
+- Use TypeScript everywhere for type safety
+- Keep the structure flat and easy to navigate
+
+### Project Structure
+
+```
+src/
+├── app/                   # Next.js App Router
 ├── features/              # Feature-based organization
 │   ├── todos/             # Todo feature (self-contained)
 │   └── users/             # User feature (self-contained)

@@ -20,7 +20,7 @@ approach balances Clean Architecture principles with practical development needs
 
 ```
 src/
-├── app/                    # Next.js App Router
+├── app/                   # Next.js App Router
 ├── features/              # Feature-based organization
 │   ├── todos/             # Todo feature
 │   └── users/             # User feature
@@ -48,9 +48,9 @@ features/todos/
 │   ├── get-todos.use-case.ts
 │   ├── update-todo.use-case.ts
 │   └── delete-todo.use-case.ts
-├── store.ts              # Feature-specific state management
-├── types.ts              # Feature-specific type definitions
-└── validations.ts        # Feature-specific validation schemas
+├── store.ts               # Feature-specific state management
+├── types.ts               # Feature-specific type definitions
+└── validations.ts         # Feature-specific validation schemas
 ```
 
 **Guidelines:**

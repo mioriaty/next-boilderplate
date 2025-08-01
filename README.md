@@ -40,7 +40,7 @@ This project uses a hybrid architecture that combines feature-based organization
 
 ```
 src/
-├── app/                    # Next.js App Router
+├── app/                   # Next.js App Router
 │   ├── layout.tsx         # Root layout component
 │   ├── page.tsx           # Home page component
 │   └── globals.css        # Global styles
@@ -59,18 +59,18 @@ src/
 │       └── validations.ts # User validation schemas
 ├── shared/                # Shared utilities and components
 │   ├── components/        # Reusable UI components
-│   │   ├── ui/           # shadcn/ui components
-│   │   └── forms/        # Form components
-│   ├── hooks/            # Custom React hooks
-│   ├── utils/            # Utility functions
-│   └── validations/      # Shared validation schemas
+│   │   ├── ui/            # shadcn/ui components
+│   │   └── forms/         # Form components
+│   ├── hooks/             # Custom React hooks
+│   ├── utils/             # Utility functions
+│   └── validations/       # Shared validation schemas
 ├── services/              # Data access and external services
 │   ├── repositories/      # Data access implementations
 │   └── interfaces/        # Service contracts
 ├── models/                # Core business models and types
-│   ├── todo.ts           # Todo entity
-│   ├── user.ts           # User entity
-│   └── errors/           # Custom error classes
+│   ├── todo.ts            # Todo entity
+│   ├── user.ts            # User entity
+│   └── errors/            # Custom error classes
 ├── stores/                # Global state management
 └── types/                 # Global TypeScript definitions
 ```
