@@ -1,241 +1,113 @@
-# Next.js Core App
+# Next.js Core with Clean Architecture
 
-A modern Next.js application built with TypeScript, Tailwind CSS v3, shadcn/ui, and a simplified hybrid architecture
-that balances Clean Architecture principles with practical development needs.
+A modern Next.js application built with Clean Architecture principles, featuring Drizzle ORM, PostgreSQL, and Supabase
+integration.
 
-## Features
+## 🚀 Features
 
 - **Next.js 15** with App Router
 - **TypeScript** for type safety
-- **Tailwind CSS v3** for styling
-- **shadcn/ui** for consistent, accessible components
-- **Hybrid Architecture** - Feature-based organization with shared utilities
+- **Clean Architecture** with pure function use cases
+- **Drizzle ORM** with PostgreSQL
+- **Supabase** for authentication and real-time features
 - **Zustand** for state management
-- **React Hook Form** with Zod validation
-- **Jest & Testing Library** for testing
-- **ESLint** for code quality
-- **Prettier** for code formatting
-- **Accessibility** focused components
+- **Shadcn UI** for beautiful components
+- **Tailwind CSS** for styling
+- **Jest & React Testing Library** for testing
+- **ESLint & Prettier** for code quality
 
-## Tech Stack
+## 🏗️ Architecture
 
-- React 19
-- Next.js 15
-- TypeScript
-- Tailwind CSS v3
-- shadcn/ui
-- Hybrid Architecture
-- Zustand
-- React Hook Form
-- Zod
-- Jest & Testing Library
-- Radix UI
-- Prettier
-
-## Hybrid Architecture
-
-This project uses a hybrid architecture that combines feature-based organization with shared utilities:
-
-### 🏗️ **Project Structure**
+### Clean Architecture Layers
 
 ```
 src/
-├── app/                   # Next.js App Router
-│   ├── layout.tsx         # Root layout component
-│   ├── page.tsx           # Home page component
-│   └── globals.css        # Global styles
-├── features/              # Feature-based organization
-│   ├── todos/             # Todo feature
-│   │   ├── components/    # Todo-specific components
-│   │   ├── services/      # Todo business logic
-│   │   ├── store.ts       # Todo state management
-│   │   ├── types.ts       # Todo type definitions
-│   │   └── validations.ts # Todo validation schemas
-│   └── users/             # User feature
-│       ├── components/    # User-specific components
-│       ├── services/      # User business logic
-│       ├── store.ts       # User state management
-│       ├── types.ts       # User type definitions
-│       └── validations.ts # User validation schemas
-├── shared/                # Shared utilities and components
-│   ├── components/        # Reusable UI components
-│   │   ├── ui/            # shadcn/ui components
-│   │   └── forms/         # Form components
-│   ├── hooks/             # Custom React hooks
-│   ├── utils/             # Utility functions
-│   └── validations/       # Shared validation schemas
-├── services/              # Data access and external services
-│   ├── repositories/      # Data access implementations
-│   └── interfaces/        # Service contracts
-├── models/                # Core business models and types
-│   ├── todo.ts            # Todo entity
-│   ├── user.ts            # User entity
-│   └── errors/            # Custom error classes
-├── stores/                # Global state management
-└── types/                 # Global TypeScript definitions
+├── entities/           # 🟡 Business entities and models
+├── application/        # 🔴 Use cases and interfaces
+├── infrastructure/     # 🔵 Database and external services
+├── libs/              # Shared utilities and components
+└── stores/            # Global state management
 ```
 
-### 🎯 **Architecture Principles**
+### Database Setup
 
-- **Feature-First**: Each feature is self-contained with its own components, services, and state
-- **Shared Utilities**: Common code is centralized in `shared/`
-- **Clean Separation**: Business logic in services, UI in components
-- **Type Safety**: Comprehensive TypeScript usage throughout
-- **Pure Functions**: Business logic implemented as pure functions
-- **Dependency Injection**: Services accept dependencies as parameters
+The project uses **Drizzle ORM** with **PostgreSQL** and **Supabase**:
 
-### 📁 **Directory Guidelines**
+- **Schema**: `src/libs/database/schema.ts`
+- **Connection**: `src/libs/database/connection.ts`
+- **Supabase**: `src/libs/database/supabase.ts`
 
-#### **Features** (`src/features/`)
-
-- **Self-contained**: Each feature has everything it needs
-- **Components**: Feature-specific UI components
-- **Services**: Business logic and data access
-- **Store**: Feature-specific state management
-- **Types**: Feature-specific type definitions
-- **Validations**: Feature-specific validation schemas
-
-#### **Shared** (`src/shared/`)
-
-- **Components**: Reusable UI components (shadcn/ui, forms)
-- **Hooks**: Custom React hooks used across features
-- **Utils**: Utility functions and helpers
-- **Validations**: Shared validation schemas
-
-#### **Services** (`src/services/`)
-
-- **Repositories**: Data access implementations
-- **Interfaces**: Service contracts and types
-- **External APIs**: Third-party service integrations
-
-#### **Models** (`src/models/`)
-
-- **Entities**: Core business models (User, Todo)
-- **Errors**: Custom error classes
-- **Types**: Global type definitions
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- pnpm
-
-### Installation
+## 📦 Installation
 
 ```bash
 # Install dependencies
 pnpm install
 
-# Run development server
-pnpm dev
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your database and Supabase credentials
 
-# Build for production
-pnpm build
+# Generate database migrations
+pnpm db:generate
+
+# Push schema to database
+pnpm db:push
+```
+
+## 🛠️ Development
+
+```bash
+# Start development server
+pnpm dev
 
 # Run tests
 pnpm test
 
-# Run linting
-pnpm lint
+# Run tests in watch mode
+pnpm test:watch
 
-# Fix linting issues
+# Lint and fix
 pnpm lint:fix
 
 # Format code
 pnpm format
-
-# Check formatting
-pnpm format:check
 ```
 
-## Development Guidelines
+## 🗄️ Database Commands
 
-### Feature Development
+```bash
+# Generate migrations
+pnpm db:generate
 
-1. **Create Feature Structure**:
+# Push schema changes
+pnpm db:push
 
-   ```bash
-   src/features/your-feature/
-   ├── components/
-   ├── services/
-   ├── store.ts
-   ├── types.ts
-   └── validations.ts
-   ```
+# Run migrations
+pnpm db:migrate
 
-2. **Implement Business Logic**:
+# Open Drizzle Studio
+pnpm db:studio
+```
 
-   ```typescript
-   // src/features/todos/services/create-todo.use-case.ts
-   export async function createTodoUseCase(
-     dependencies: { todoRepository: TodoRepository },
-     data: CreateTodoInput
-   ): Promise<Result<Todo, AppError>> {
-     // Pure function implementation
-   }
-   ```
+## 🔧 Environment Variables
 
-3. **Add State Management**:
+Create a `.env.local` file:
 
-   ```typescript
-   // src/features/todos/store.ts
-   export const useTodoStore = create<TodoStore>((set) => ({
-     // State and actions
-   }));
-   ```
+```env
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/database"
 
-4. **Create Components**:
-   ```typescript
-   // src/features/todos/components/todo-form.tsx
-   export function TodoForm() {
-     // Component implementation
-   }
-   ```
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+```
 
-### Code Organization
+## 📚 Documentation
 
-- **File Naming**: Use kebab-case for files, camelCase for functions
-- **Component Naming**: Use PascalCase for components
-- **Type Definitions**: Place in `types.ts` within each feature
-- **Validation**: Use Zod schemas in `validations.ts`
-- **Testing**: Place tests next to the files they test
+- [Database Setup](./DATABASE_SETUP.md) - Complete database configuration guide
+- [Architecture](./ARCHITECTURE.md) - Detailed architecture documentation
 
-### State Management
-
-- **Feature Stores**: Use Zustand for feature-specific state
-- **Global State**: Use shared stores for cross-feature state
-- **Server State**: Use React Query or SWR for server state
-- **Form State**: Use React Hook Form for form state
-
-### Testing Strategy
-
-- **Unit Tests**: Test services as pure functions
-- **Component Tests**: Test UI components with React Testing Library
-- **Integration Tests**: Test feature workflows
-- **Mock Dependencies**: Use dependency injection for easy mocking
-
-### Code Style
-
-- Follow TypeScript best practices
-- Use functional programming patterns
-- Implement proper error handling
-- Write comprehensive tests
-- Follow accessibility guidelines
-- Use semantic HTML
-- Implement responsive design
-- Use shadcn/ui components for consistency
-- Format code with Prettier on save
-
-## Code Formatting
-
-The project uses Prettier for consistent code formatting:
-
-- **Auto-format on save** - VS Code settings configured
-- **ESLint integration** - Prettier rules integrated with ESLint
-- **Consistent style** - Tabs, single quotes, no semicolons, 80 char line length
-
-## Testing
+## 🧪 Testing
 
 ```bash
 # Run all tests
@@ -244,20 +116,17 @@ pnpm test
 # Run tests in watch mode
 pnpm test:watch
 
-# Run tests with coverage
+# Generate coverage report
 pnpm test:coverage
 ```
 
-## Contributing
+## 🚀 Deployment
 
-1. Follow the hybrid architecture principles
-2. Keep features self-contained
-3. Share common code in `shared/`
-4. Write tests for business logic and components
-5. Ensure accessibility compliance
-6. Update documentation as needed
-7. Format code before committing
+1. Set up your PostgreSQL database (Supabase recommended)
+2. Configure environment variables
+3. Run database migrations
+4. Deploy to your preferred platform
 
-## License
+## 📝 License
 
 MIT

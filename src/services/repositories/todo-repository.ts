@@ -1,114 +1,143 @@
-// src/services/repositories/todo-repository.ts
-import { AppError } from '@/models/errors/app-error';
 import { CreateTodoData, Todo, TodoFilters, UpdateTodoData } from '@/models/todo';
+import { TodoRepository } from '@/services/interfaces/todo-repository';
+import { db } from '@/shared/database/connection';
+import { todos } from '@/shared/database/schemas/todos';
+import { serverOnly } from '@/shared/database/server-only';
+import { and, desc, eq, like } from 'drizzle-orm';
 
-import { TodoRepository } from '../interfaces/todo-repository';
-
-export class TodoRepositoryImpl implements TodoRepository {
-  private todos: Todo[] = [];
-  private nextId = 1;
-
+export class DrizzleTodoRepository implements TodoRepository {
   async create(data: CreateTodoData): Promise<Todo> {
-    try {
-      const todo: Todo = {
-        id: this.generateId(),
+    serverOnly(); // Ensure server-side only
+
+    const [todo] = await db
+      .insert(todos)
+      .values({
         title: data.title,
         description: data.description,
-        completed: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+        userId: data.userId
+      })
+      .returning();
 
-      this.todos.push(todo);
-      return todo;
-    } catch (error) {
-      throw new AppError('Failed to create todo', 500);
-    }
+    return {
+      id: todo.id,
+      title: todo.title,
+      description: todo.description || undefined,
+      completed: todo.completed,
+      userId: todo.userId || undefined,
+      createdAt: todo.createdAt,
+      updatedAt: todo.updatedAt
+    };
   }
 
   async findById(id: string): Promise<Todo | null> {
-    try {
-      return this.todos.find((todo) => todo.id === id) || null;
-    } catch (error) {
-      throw new AppError('Failed to find todo', 500);
-    }
+    serverOnly(); // Ensure server-side only
+
+    const [todo] = await db.select().from(todos).where(eq(todos.id, id));
+    if (!todo) return null;
+
+    return {
+      id: todo.id,
+      title: todo.title,
+      description: todo.description || undefined,
+      completed: todo.completed,
+      userId: todo.userId || undefined,
+      createdAt: todo.createdAt,
+      updatedAt: todo.updatedAt
+    };
   }
 
   async findAll(filters?: TodoFilters): Promise<Todo[]> {
-    try {
-      let filteredTodos = [...this.todos];
+    serverOnly(); // Ensure server-side only
 
-      if (filters?.completed !== undefined) {
-        filteredTodos = filteredTodos.filter((todo) => todo.completed === filters.completed);
-      }
+    const conditions = [];
 
-      if (filters?.search) {
-        const searchTerm = filters.search.toLowerCase();
-        filteredTodos = filteredTodos.filter(
-          (todo) =>
-            todo.title.toLowerCase().includes(searchTerm) || todo.description?.toLowerCase().includes(searchTerm)
-        );
-      }
-
-      return filteredTodos.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    } catch (error) {
-      throw new AppError('Failed to find todos', 500);
+    if (filters?.userId) {
+      conditions.push(eq(todos.userId, filters.userId));
     }
+
+    if (filters?.completed !== undefined) {
+      conditions.push(eq(todos.completed, filters.completed));
+    }
+
+    if (filters?.search) {
+      conditions.push(like(todos.title, `%${filters.search}%`));
+    }
+
+    let results;
+    if (conditions.length > 0) {
+      results = await db
+        .select()
+        .from(todos)
+        .where(and(...conditions))
+        .orderBy(desc(todos.createdAt));
+    } else {
+      results = await db.select().from(todos).orderBy(desc(todos.createdAt));
+    }
+
+    return results.map((todo) => ({
+      id: todo.id,
+      title: todo.title,
+      description: todo.description || undefined,
+      completed: todo.completed,
+      userId: todo.userId || undefined,
+      createdAt: todo.createdAt,
+      updatedAt: todo.updatedAt
+    }));
   }
 
   async update(id: string, data: UpdateTodoData): Promise<Todo> {
-    try {
-      const todoIndex = this.todos.findIndex((todo) => todo.id === id);
+    serverOnly(); // Ensure server-side only
 
-      if (todoIndex === -1) {
-        throw new AppError('Todo not found', 404);
-      }
+    const [todo] = await db
+      .update(todos)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(todos.id, id))
+      .returning();
 
-      const updatedTodo = {
-        ...this.todos[todoIndex],
-        ...data,
-        updatedAt: new Date()
-      };
-
-      this.todos[todoIndex] = updatedTodo;
-      return updatedTodo;
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      throw new AppError('Failed to update todo', 500);
-    }
+    return {
+      id: todo.id,
+      title: todo.title,
+      description: todo.description || undefined,
+      completed: todo.completed,
+      userId: todo.userId || undefined,
+      createdAt: todo.createdAt,
+      updatedAt: todo.updatedAt
+    };
   }
 
   async delete(id: string): Promise<void> {
-    try {
-      const todoIndex = this.todos.findIndex((todo) => todo.id === id);
+    serverOnly(); // Ensure server-side only
 
-      if (todoIndex === -1) {
-        throw new AppError('Todo not found', 404);
-      }
-
-      this.todos.splice(todoIndex, 1);
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      throw new AppError('Failed to delete todo', 500);
-    }
+    await db.delete(todos).where(eq(todos.id, id));
   }
 
-  async toggleComplete(id: string): Promise<Todo> {
-    try {
-      const todo = await this.findById(id);
+  async toggle(id: string): Promise<Todo> {
+    serverOnly(); // Ensure server-side only
 
-      if (!todo) {
-        throw new AppError('Todo not found', 404);
-      }
-
-      return await this.update(id, { completed: !todo.completed });
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      throw new AppError('Failed to toggle todo completion', 500);
+    // First get the current todo
+    const currentTodo = await this.findById(id);
+    if (!currentTodo) {
+      throw new Error('Todo not found');
     }
-  }
 
-  private generateId(): string {
-    return `todo_${this.nextId++}_${Date.now()}`;
+    // Update with the opposite completed value
+    const [todo] = await db
+      .update(todos)
+      .set({
+        completed: !currentTodo.completed,
+        updatedAt: new Date()
+      })
+      .where(eq(todos.id, id))
+      .returning();
+
+    return {
+      id: todo.id,
+      title: todo.title,
+      description: todo.description || undefined,
+      completed: todo.completed,
+      userId: todo.userId || undefined,
+      createdAt: todo.createdAt,
+      updatedAt: todo.updatedAt
+    };
   }
 }

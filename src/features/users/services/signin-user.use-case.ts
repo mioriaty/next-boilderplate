@@ -1,55 +1,37 @@
 import { UnauthorizedError, ValidationError } from '@/models/errors/app-error';
-import { User, UserCredentials } from '@/models/user';
-import { AuthService } from '@/services/auth-service';
-import { UserRepository } from '@/services/user-repository';
+import { AuthService } from '@/services/interfaces/auth-service';
+import { UserRepository } from '@/services/interfaces/user-repository';
 
-export interface SigninUserDependencies {
+import { SignInData, User } from '../types';
+import { signInSchema } from '../validations';
+
+export interface SignInUserDependencies {
   userRepository: UserRepository;
   authService: AuthService;
 }
 
-export interface SigninUserResult {
+export interface SignInUserResult {
   user: User;
-  token: string;
 }
 
-/**
- * Pure function use case for signing in a user
- */
-export async function signinUserUseCase(
-  dependencies: SigninUserDependencies,
-  credentials: UserCredentials
-): Promise<SigninUserResult> {
+export async function signInUserUseCase(
+  dependencies: SignInUserDependencies,
+  data: SignInData
+): Promise<SignInUserResult> {
   // Validate input
-  if (!credentials.email || !isValidEmail(credentials.email)) {
-    throw new ValidationError('Invalid email address');
-  }
-
-  if (!credentials.password) {
-    throw new ValidationError('Password is required');
-  }
+  const validatedData = signInSchema.parse(data);
 
   // Find user by email
-  const user = await dependencies.userRepository.findByEmail(credentials.email);
+  const user = await dependencies.userRepository.findByEmail(validatedData.email);
   if (!user) {
     throw new UnauthorizedError('Invalid email or password');
   }
 
-  // Verify password (assuming we have a way to get hashed password)
-  // This is a simplified version - in real implementation you'd need to handle password verification
-  const isValidPassword = await dependencies.authService.comparePassword(credentials.password, user.password || '');
-
+  // Verify password
+  const isValidPassword = await dependencies.authService.verifyPassword(validatedData.password, user.password);
   if (!isValidPassword) {
     throw new UnauthorizedError('Invalid email or password');
   }
 
-  // Generate token
-  const token = await dependencies.authService.generateToken(user);
-
-  return { user, token };
-}
-
-function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  return { user };
 }

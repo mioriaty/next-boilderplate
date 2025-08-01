@@ -1,19 +1,25 @@
 export interface User {
   id: string;
-  name: string;
   email: string;
-  password?: string;
+  name: string;
+  password: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface CreateUserData {
-  name: string;
+export interface NewUser {
   email: string;
+  name: string;
   password: string;
 }
 
-export interface UserCredentials {
+export interface CreateUserData {
+  email: string;
+  name: string;
+  password: string;
+}
+
+export interface SignInData {
   email: string;
   password: string;
 }

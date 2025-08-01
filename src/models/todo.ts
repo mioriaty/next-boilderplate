@@ -3,6 +3,7 @@ export interface Todo {
   title: string;
   description?: string;
   completed: boolean;
+  userId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -10,6 +11,7 @@ export interface Todo {
 export interface CreateTodoData {
   title: string;
   description?: string;
+  userId?: string;
 }
 
 export interface UpdateTodoData {
@@ -19,6 +21,7 @@ export interface UpdateTodoData {
 }
 
 export interface TodoFilters {
+  userId?: string;
   completed?: boolean;
   search?: string;
 }

@@ -1,4 +1,3 @@
-// src/services/interfaces/todo-repository.ts
 import { CreateTodoData, Todo, TodoFilters, UpdateTodoData } from '@/models/todo';
 
 export interface TodoRepository {
@@ -7,5 +6,5 @@ export interface TodoRepository {
   findAll(filters?: TodoFilters): Promise<Todo[]>;
   update(id: string, data: UpdateTodoData): Promise<Todo>;
   delete(id: string): Promise<void>;
-  toggleComplete(id: string): Promise<Todo>;
+  toggle(id: string): Promise<Todo>;
 }

@@ -1,6 +1,3 @@
----
-alwaysApply: true
----
 
 # base-rules
 
@@ -14,6 +11,7 @@ alwaysApply: true
 - Prefer pure functions for business logic and dependency injection for testability
 - Use TypeScript everywhere for type safety
 - Keep the structure flat and easy to navigate
+- Separate client-side and server-side concerns clearly
 
 ### Project Structure
 
@@ -22,22 +20,24 @@ src/
 ├── app/                    # Next.js App Router
 ├── features/              # Feature-based organization
 │   ├── todos/             # Todo feature (self-contained)
+│   │   ├── components/    # Feature-specific UI components
+│   │   ├── services/      # Business logic (use cases)
+│   │   ├── store.ts       # Feature-specific state management
+│   │   ├── types.ts       # Feature-specific type definitions
+│   │   └── validations.ts # Feature-specific validation schemas
 │   └── users/             # User feature (self-contained)
 ├── shared/                # Shared utilities and components
+│   ├── components/        # Reusable UI components
+│   ├── database/          # Database configuration and schemas
+│   │   ├── schemas/       # Domain-specific schemas
+│   │   ├── connection.ts  # Database connection (server-only)
+│   │   └── server-only.ts # Server-side utilities
+│   └── factories/         # Use case factories
 ├── services/              # Data access and external services
+│   ├── repositories/      # Repository implementations
+│   └── interfaces/        # Service contracts
 ├── models/                # Core business models and types
-├── stores/                # Global state management
 └── types/                 # Global TypeScript definitions
-```
-
-#### Feature Example
-```
-src/features/todos/
-├── components/            # Feature-specific UI components
-├── services/              # Business logic and data access
-├── store.ts               # Feature-specific state management
-├── types.ts               # Feature-specific type definitions
-└── validations.ts         # Feature-specific validation schemas
 ```
 
 ### Guidelines
@@ -52,6 +52,15 @@ src/features/todos/
 - **Error Handling**: Use custom error classes in `models/errors/`
 - **Documentation**: Keep README and ARCHITECTURE.md up to date with structure and patterns
 - **File Headers**: Do NOT add file path comments at the top of files - they are unnecessary and create clutter
+- **Server-Side Safety**: Use `serverOnly()` utility for database operations
+- **Client-Side State**: Keep client-side stores simple, move database operations to API routes
+
+### Database Architecture
+- **Schemas**: Organize by domain in `src/shared/database/schemas/`
+- **Connection**: Server-side only with `serverOnly()` protection
+- **Repositories**: Implement data access with proper error handling
+- **Factories**: Create use case instances with dependencies
+- **API Routes**: Handle database operations in Next.js API routes
 
 ### Do's
 - Keep features self-contained
@@ -61,6 +70,9 @@ src/features/todos/
 - Write comprehensive tests
 - Follow consistent naming conventions
 - Document complex business logic
+- Separate client and server concerns
+- Use server-only utilities for database operations
+- Organize schemas by domain
 
 ### Don'ts
 - Don't create deep nesting or excessive abstraction
@@ -70,82 +82,9 @@ src/features/todos/
 - Don't ignore TypeScript errors
 - Don't forget to test shared utilities
 - Don't add file path comments at the top of files
-
-### Scaling
-- For small projects: keep everything simple, use this structure as-is
-- For medium projects: group related features, add feature-specific docs
-- For large projects: consider domain-based grouping, stricter guidelines, and more documentation
-
-    - Use proper headings
-    - Use proper lists
-# base-rules
-
-## Hybrid Architecture Best Practices (Medium Project)
-
-### Philosophy
-- Organize code by feature first, not by technical type
-- Keep features self-contained: UI, business logic, state, types, and validation together
-- Centralize shared code in `src/shared/`
-- Use Clean Architecture principles where practical, but avoid unnecessary abstraction
-- Prefer pure functions for business logic and dependency injection for testability
-- Use TypeScript everywhere for type safety
-- Keep the structure flat and easy to navigate
-
-### Project Structure
-
-```
-src/
-├── app/                   # Next.js App Router
-├── features/              # Feature-based organization
-│   ├── todos/             # Todo feature (self-contained)
-│   └── users/             # User feature (self-contained)
-├── shared/                # Shared utilities and components
-├── services/              # Data access and external services
-├── models/                # Core business models and types
-├── stores/                # Global state management
-└── types/                 # Global TypeScript definitions
-```
-
-#### Feature Example
-```
-src/features/todos/
-├── components/            # Feature-specific UI components
-├── services/              # Business logic and data access
-├── store.ts               # Feature-specific state management
-├── types.ts               # Feature-specific type definitions
-└── validations.ts         # Feature-specific validation schemas
-```
-
-### Guidelines
-- **Feature-First**: All code for a feature lives together
-- **Shared Utilities**: Only put code in `shared/` if used by multiple features
-- **Business Logic**: Implement as pure functions, use dependency injection for repositories/services
-- **State Management**: Use Zustand for feature and global state
-- **Validation**: Use Zod for schemas, colocate with feature
-- **Testing**: Place tests next to the files they test
-- **Naming**: Use kebab-case for files, PascalCase for components, camelCase for functions/variables
-- **Type Safety**: Use TypeScript interfaces/types everywhere
-- **Error Handling**: Use custom error classes in `models/errors/`
-- **Documentation**: Keep README and ARCHITECTURE.md up to date with structure and patterns
-- **File Headers**: Do NOT add file path comments at the top of files - they are unnecessary and create clutter
-
-### Do's
-- Keep features self-contained
-- Use shared utilities for common code
-- Write pure functions for business logic
-- Use dependency injection for testability
-- Write comprehensive tests
-- Follow consistent naming conventions
-- Document complex business logic
-
-### Don'ts
-- Don't create deep nesting or excessive abstraction
-- Don't duplicate code across features
-- Don't mix UI and business logic
-- Don't skip error handling
-- Don't ignore TypeScript errors
-- Don't forget to test shared utilities
-- Don't add file path comments at the top of files
+- Don't import server-side modules on the client
+- Don't mix client and server state management
+- Don't create overly complex database schemas
 
 ### Scaling
 - For small projects: keep everything simple, use this structure as-is

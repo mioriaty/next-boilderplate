@@ -1,19 +1,37 @@
-export interface CreateUserRequest {
+export interface User {
+  id: string;
   email: string;
-  password: string;
   name: string;
+  password: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface SignInRequest {
+export interface NewUser {
+  email: string;
+  name: string;
+  password: string;
+}
+
+export interface CreateUserData {
+  email: string;
+  name: string;
+  password: string;
+}
+
+export interface SignInData {
   email: string;
   password: string;
 }
 
-export interface AuthResponse {
-  user: {
-    id: string;
-    email: string;
-    name: string;
-  };
-  token: string;
+export interface UserStore {
+  user: User | null;
+  isLoading: boolean;
+  error: string | null;
+
+  // Actions
+  createUser: (data: CreateUserData) => Promise<void>;
+  signIn: (data: SignInData) => Promise<void>;
+  signOut: () => Promise<void>;
+  clearError: () => void;
 }

@@ -1,32 +1,59 @@
-import { User } from '@/models/user';
+import { createUserUseCaseFactory, signInUserUseCaseFactory } from '@/shared/factories/use-case-factory';
 import { create } from 'zustand';
 
-interface UserState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-}
-
-interface UserActions {
-  setUser: (user: User | null) => void;
-  setAuthenticated: (authenticated: boolean) => void;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  logout: () => void;
-}
-
-type UserStore = UserState & UserActions;
+import { CreateUserData, SignInData, UserStore } from './types';
 
 export const useUserStore = create<UserStore>((set) => ({
   user: null,
-  isAuthenticated: false,
   isLoading: false,
   error: null,
 
-  setUser: (user) => set({ user, isAuthenticated: !!user }),
-  setAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
-  setLoading: (isLoading) => set({ isLoading }),
-  setError: (error) => set({ error }),
-  logout: () => set({ user: null, isAuthenticated: false })
+  // Create user
+  createUser: async (data: CreateUserData) => {
+    try {
+      set({ isLoading: true, error: null });
+      const createUser = createUserUseCaseFactory();
+      const result = await createUser(data);
+      set({ user: result.user, isLoading: false });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to create user',
+        isLoading: false
+      });
+    }
+  },
+
+  // Sign in
+  signIn: async (data: SignInData) => {
+    try {
+      set({ isLoading: true, error: null });
+      const signIn = signInUserUseCaseFactory();
+      const result = await signIn(data);
+      set({ user: result.user, isLoading: false });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to sign in',
+        isLoading: false
+      });
+    }
+  },
+
+  // Sign out
+  signOut: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      // TODO: Implement sign out logic
+      set({ user: null, isLoading: false });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to sign out',
+        isLoading: false
+      });
+    }
+  },
+
+  // Clear error
+  clearError: () => {
+    set({ error: null });
+  }
 }));

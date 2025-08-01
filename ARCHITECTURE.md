@@ -15,6 +15,8 @@ approach balances Clean Architecture principles with practical development needs
 4. **Type Safety**: Comprehensive TypeScript usage throughout
 5. **Pure Functions**: Business logic implemented as pure functions with dependency injection
 6. **Scalable Structure**: Easy to add new features without affecting existing ones
+7. **Server-Side Safety**: Database operations are server-side only with proper protection
+8. **Client-Side Simplicity**: Client stores focus on UI state, database operations via API routes
 
 ### 🏗️ **Directory Structure**
 
@@ -23,11 +25,23 @@ src/
 ├── app/                   # Next.js App Router
 ├── features/              # Feature-based organization
 │   ├── todos/             # Todo feature
+│   │   ├── components/    # Feature-specific UI components
+│   │   ├── services/      # Business logic (use cases)
+│   │   ├── store.ts       # Feature-specific state management
+│   │   ├── types.ts       # Feature-specific type definitions
+│   │   └── validations.ts # Feature-specific validation schemas
 │   └── users/             # User feature
 ├── shared/                # Shared utilities and components
+│   ├── components/        # Reusable UI components
+│   ├── database/          # Database configuration and schemas
+│   │   ├── schemas/       # Domain-specific schemas
+│   │   ├── connection.ts  # Database connection (server-only)
+│   │   └── server-only.ts # Server-side utilities
+│   └── factories/         # Use case factories
 ├── services/              # Data access and external services
+│   ├── repositories/      # Repository implementations
+│   └── interfaces/        # Service contracts
 ├── models/                # Core business models and types
-├── stores/                # Global state management
 └── types/                 # Global TypeScript definitions
 ```
 
@@ -59,6 +73,7 @@ features/todos/
 - Use descriptive file names
 - Group related functionality together
 - Test each feature independently
+- Keep client-side stores simple (no direct database access)
 
 ### 📁 **Shared** (`src/shared/`)
 
@@ -69,9 +84,15 @@ shared/
 ├── components/            # Reusable UI components
 │   ├── ui/               # shadcn/ui components
 │   └── forms/            # Form components
-├── hooks/                # Custom React hooks
-├── utils/                # Utility functions
-└── validations/          # Shared validation schemas
+├── database/             # Database configuration
+│   ├── schemas/          # Domain-specific schemas
+│   │   ├── users.ts      # User domain schema
+│   │   └── todos.ts      # Todo domain schema
+│   ├── connection.ts     # Database connection (server-only)
+│   └── server-only.ts    # Server-side utilities
+└── factories/            # Use case factories
+    ├── todo-factory.ts   # Todo use case factories
+    └── user-factory.ts   # User use case factories
 ```
 
 **Guidelines:**
@@ -80,6 +101,7 @@ shared/
 - Keep utilities generic and reusable
 - Document complex utilities
 - Test shared code thoroughly
+- Use server-only protection for database operations
 
 ### 📁 **Services** (`src/services/`)
 
@@ -101,6 +123,7 @@ services/
 - Use interfaces for service contracts
 - Keep external API calls isolated
 - Handle errors consistently
+- Use server-only protection for database operations
 
 ### 📁 **Models** (`src/models/`)
 
@@ -120,6 +143,49 @@ models/
 - Use TypeScript interfaces for type safety
 - Create custom error classes for domain errors
 - Keep models simple and focused
+
+## Database Architecture
+
+### 🗄️ **Schema Organization**
+
+```
+src/shared/database/
+├── schemas/
+│   ├── index.ts          # Re-exports all schemas
+│   ├── users.ts          # User domain schema
+│   └── todos.ts          # Todo domain schema
+├── connection.ts          # Database connection (server-only)
+└── server-only.ts        # Server-side utilities
+```
+
+### 🔒 **Server-Side Safety**
+
+```typescript
+// src/shared/database/server-only.ts
+export function serverOnly() {
+  if (typeof window !== 'undefined') {
+    throw new Error('This function can only be called on the server side');
+  }
+}
+
+// Usage in repositories
+export class DrizzleTodoRepository implements TodoRepository {
+  async create(data: CreateTodoData): Promise<Todo> {
+    serverOnly(); // Ensure server-side only
+    // ... implementation
+  }
+}
+```
+
+### 🏭 **Factory Pattern**
+
+```typescript
+// src/shared/factories/todo-factory.ts
+export function createTodoUseCaseFactory() {
+  const todoRepository = new DrizzleTodoRepository();
+  return (data: CreateTodoData) => createTodoUseCase({ todoRepository }, data);
+}
+```
 
 ## Development Patterns
 
@@ -172,7 +238,7 @@ models/
    ```typescript
    // src/features/new-feature/store.ts
    export const useNewFeatureStore = create<NewFeatureStore>((set) => ({
-     // State and actions
+     // Client-side state only
    }));
    ```
 
@@ -209,13 +275,13 @@ export async function createTodoUseCase(
 ### 🔄 **State Management Pattern**
 
 ```typescript
-// Feature-specific store
+// Feature-specific store (client-side only)
 export const useTodoStore = create<TodoStore>((set, get) => ({
   todos: [],
   isLoading: false,
   error: null,
 
-  // Actions
+  // Actions (client-side only)
   setTodos: (todos) => set({ todos }),
   addTodo: (todo) =>
     set((state) => ({
@@ -243,6 +309,31 @@ describe('createTodoUseCase', () => {
 });
 ```
 
+## API Routes Pattern
+
+### 📡 **Database Operations via API Routes**
+
+```typescript
+// src/app/api/todos/route.ts
+import { createTodoUseCaseFactory } from '@/shared/factories/todo-factory';
+
+export async function POST(request: Request) {
+  try {
+    const data = await request.json();
+    const createTodo = createTodoUseCaseFactory();
+    const result = await createTodo(data);
+
+    if (result.success) {
+      return Response.json(result.data);
+    } else {
+      return Response.json({ error: result.error.message }, { status: 400 });
+    }
+  } catch (error) {
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+```
+
 ## Migration Guide
 
 ### From Clean Architecture to Hybrid
@@ -252,6 +343,7 @@ describe('createTodoUseCase', () => {
 3. **Move Shared Code**: `src/libs/` → `src/shared/`
 4. **Move Models**: `src/entities/models/` → `src/models/`
 5. **Update Imports**: Update all import paths to reflect new structure
+6. **Add Server-Side Protection**: Use `serverOnly()` for database operations
 
 ### Benefits of Migration
 
@@ -259,6 +351,7 @@ describe('createTodoUseCase', () => {
 - **Better Scalability**: New features don't affect existing ones
 - **Reduced Complexity**: Less abstraction layers
 - **Improved Developer Experience**: More intuitive structure
+- **Server-Side Safety**: Proper separation of client and server concerns
 
 ## Best Practices
 
@@ -271,6 +364,9 @@ describe('createTodoUseCase', () => {
 - Write comprehensive tests
 - Follow consistent naming conventions
 - Document complex business logic
+- Separate client and server concerns
+- Use server-only utilities for database operations
+- Organize schemas by domain
 
 ### ❌ **Don'ts**
 
@@ -280,6 +376,9 @@ describe('createTodoUseCase', () => {
 - Don't skip error handling
 - Don't ignore TypeScript errors
 - Don't forget to test shared utilities
+- Don't import server-side modules on the client
+- Don't mix client and server state management
+- Don't create overly complex database schemas
 
 ## Scaling Considerations
 
@@ -308,3 +407,5 @@ The hybrid architecture provides a balanced approach that:
 - Scales well as the project grows
 - Provides clear separation of concerns
 - Enables easy testing and maintenance
+- Properly separates client and server concerns
+- Ensures database operations are server-side only

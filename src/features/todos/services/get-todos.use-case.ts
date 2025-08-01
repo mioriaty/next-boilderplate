@@ -1,5 +1,6 @@
-import { Todo, TodoFilters } from '@/models/todo';
-import { TodoRepository } from '@/services/todo-repository';
+import { TodoRepository } from '@/services/interfaces/todo-repository';
+
+import { Todo, TodoFilters } from '../types';
 
 export interface GetTodosDependencies {
   todoRepository: TodoRepository;
@@ -13,6 +14,8 @@ export async function getTodosUseCase(
   dependencies: GetTodosDependencies,
   filters?: TodoFilters
 ): Promise<GetTodosResult> {
+  // Get todos
   const todos = await dependencies.todoRepository.findAll(filters);
+
   return { todos };
 }

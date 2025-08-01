@@ -1,92 +1,68 @@
-// src/services/repositories/user-repository.ts
-import { AppError } from '@/models/errors/app-error';
-import { CreateUserData, User } from '@/models/user';
+import { NewUser, User } from '@/models/user';
+import { UserRepository } from '@/services/interfaces/user-repository';
+import { db } from '@/shared/database/connection';
+import { users } from '@/shared/database/schemas/users';
+import { eq } from 'drizzle-orm';
 
-import { UserRepository } from '../interfaces/user-repository';
-
-export class UserRepositoryImpl implements UserRepository {
-  private users: User[] = [];
-  private nextId = 1;
-
-  async create(data: CreateUserData): Promise<User> {
-    try {
-      // Check if user with email already exists
-      const existingUser = await this.findByEmail(data.email);
-      if (existingUser) {
-        throw new AppError('User with this email already exists', 409);
-      }
-
-      const user: User = {
-        id: this.generateId(),
-        name: data.name,
-        email: data.email,
-        password: data.password, // Note: In real app, this should be hashed
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-
-      this.users.push(user);
-      return user;
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      throw new AppError('Failed to create user', 500);
-    }
-  }
-
-  async findById(id: string): Promise<User | null> {
-    try {
-      return this.users.find((user) => user.id === id) || null;
-    } catch (error) {
-      throw new AppError('Failed to find user', 500);
-    }
+export class DrizzleUserRepository implements UserRepository {
+  async create(data: NewUser): Promise<User> {
+    const [user] = await db.insert(users).values(data).returning();
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      password: user.password,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    try {
-      return this.users.find((user) => user.email === email) || null;
-    } catch (error) {
-      throw new AppError('Failed to find user by email', 500);
-    }
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    if (!user) return null;
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      password: user.password,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
+  }
+
+  async findById(id: string): Promise<User | null> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    if (!user) return null;
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      password: user.password,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
   }
 
   async update(id: string, data: Partial<User>): Promise<User> {
-    try {
-      const userIndex = this.users.findIndex((user) => user.id === id);
+    const [user] = await db
+      .update(users)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
 
-      if (userIndex === -1) {
-        throw new AppError('User not found', 404);
-      }
-
-      const updatedUser = {
-        ...this.users[userIndex],
-        ...data,
-        updatedAt: new Date()
-      };
-
-      this.users[userIndex] = updatedUser;
-      return updatedUser;
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      throw new AppError('Failed to update user', 500);
-    }
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      password: user.password,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
   }
 
   async delete(id: string): Promise<void> {
-    try {
-      const userIndex = this.users.findIndex((user) => user.id === id);
-
-      if (userIndex === -1) {
-        throw new AppError('User not found', 404);
-      }
-
-      this.users.splice(userIndex, 1);
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      throw new AppError('Failed to delete user', 500);
-    }
-  }
-
-  private generateId(): string {
-    return `user_${this.nextId++}_${Date.now()}`;
+    await db.delete(users).where(eq(users.id, id));
   }
 }

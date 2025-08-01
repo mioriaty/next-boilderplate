@@ -1,6 +1,7 @@
 import { NotFoundError } from '@/models/errors/app-error';
-import { Todo } from '@/models/todo';
-import { TodoRepository } from '@/services/todo-repository';
+import { TodoRepository } from '@/services/interfaces/todo-repository';
+
+import { Todo } from '../types';
 
 export interface ToggleTodoDependencies {
   todoRepository: TodoRepository;
@@ -17,8 +18,8 @@ export async function toggleTodoUseCase(dependencies: ToggleTodoDependencies, id
     throw new NotFoundError('Todo not found');
   }
 
-  // Toggle todo completion
-  const todo = await dependencies.todoRepository.toggleComplete(id);
+  // Toggle todo
+  const todo = await dependencies.todoRepository.toggle(id);
 
   return { todo };
 }
