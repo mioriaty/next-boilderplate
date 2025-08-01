@@ -235,4 +235,54 @@ CREATE POLICY "Allow all operations on users" ON users
 - [ ] Data persists after page refresh
 - [ ] Data visible in Supabase dashboard
 
+## Project Structure Overview
+
+```
+src/
+├── app/
+│   ├── api/                    # API routes for database operations
+│   │   ├── todos/
+│   │   │   ├── route.ts        # GET /api/todos, POST /api/todos
+│   │   │   └── [id]/
+│   │   │       └── route.ts    # GET, PUT, DELETE, PATCH /api/todos/[id]
+│   │   └── users/
+│   │       ├── route.ts        # User API endpoints
+│   │       └── [id]/
+│   │           └── route.ts    # Individual user operations
+│   ├── clear-storage/          # Utility to clear local storage
+│   ├── test-todos/             # Test page for Supabase integration
+│   └── todos/                  # Sample Supabase integration page
+├── features/
+│   └── todos/                  # Todo feature
+│       ├── components/         # Feature-specific UI components
+│       ├── services/           # Business logic (use cases)
+│       ├── store.ts            # Feature-specific state management
+│       ├── types.ts            # Feature-specific type definitions
+│       └── validations.ts      # Feature-specific validation schemas
+├── shared/
+│   ├── components/             # Reusable UI components
+│   ├── database/               # Database configuration
+│   │   ├── schemas/            # Domain-specific schemas
+│   │   ├── connection.ts       # Database connection (server-only)
+│   │   ├── supabase-client.ts  # Supabase client configuration
+│   │   └── server-only.ts      # Server-side utilities
+│   └── factories/              # Use case factories
+└── services/
+    ├── repositories/           # Repository implementations
+    └── interfaces/             # Service contracts
+```
+
+## Data Persistence
+
+**Important**: All todo data is now saved directly to the Supabase database. The app no longer uses local storage for
+persistence.
+
+### Benefits:
+
+- ✅ **Data persists across devices**
+- ✅ **Real-time synchronization**
+- ✅ **Backup and recovery**
+- ✅ **Multi-user support**
+- ✅ **No local storage dependencies**
+
 Once you complete these steps, your todos app will be fully connected to Supabase! 🎉

@@ -12,12 +12,19 @@
 - Use TypeScript everywhere for type safety
 - Keep the structure flat and easy to navigate
 - Separate client-side and server-side concerns clearly
+- Use database-only persistence with Supabase
 
 ### Project Structure
 
 ```
 src/
 ├── app/                    # Next.js App Router
+│   ├── api/               # API routes for database operations
+│   │   ├── todos/         # Todo API endpoints
+│   │   └── users/         # User API endpoints
+│   ├── clear-storage/     # Utility to clear local storage
+│   ├── test-todos/        # Test page for Supabase integration
+│   └── todos/             # Sample Supabase integration page
 ├── features/              # Feature-based organization
 │   ├── todos/             # Todo feature (self-contained)
 │   │   ├── components/    # Feature-specific UI components
@@ -31,6 +38,7 @@ src/
 │   ├── database/          # Database configuration and schemas
 │   │   ├── schemas/       # Domain-specific schemas
 │   │   ├── connection.ts  # Database connection (server-only)
+│   │   ├── supabase-client.ts # Supabase client configuration
 │   │   └── server-only.ts # Server-side utilities
 │   └── factories/         # Use case factories
 ├── services/              # Data access and external services
@@ -54,6 +62,7 @@ src/
 - **File Headers**: Do NOT add file path comments at the top of files - they are unnecessary and create clutter
 - **Server-Side Safety**: Use `serverOnly()` utility for database operations
 - **Client-Side State**: Keep client-side stores simple, move database operations to API routes
+- **Database-Only Persistence**: All data saved to Supabase, no local storage dependencies
 
 ### Database Architecture
 - **Schemas**: Organize by domain in `src/shared/database/schemas/`
@@ -61,6 +70,14 @@ src/
 - **Repositories**: Implement data access with proper error handling
 - **Factories**: Create use case instances with dependencies
 - **API Routes**: Handle database operations in Next.js API routes
+- **Supabase Integration**: Use Supabase client for type-safe database access
+
+### API Routes Pattern
+- **Server-Side Only**: All database operations via API routes
+- **Error Handling**: Implement proper error handling and status codes
+- **Type Safety**: Use TypeScript for request/response types
+- **Consistent Responses**: Return standardized JSON responses
+- **Supabase Client**: Use server-side Supabase client for database operations
 
 ### Do's
 - Keep features self-contained
@@ -73,6 +90,9 @@ src/
 - Separate client and server concerns
 - Use server-only utilities for database operations
 - Organize schemas by domain
+- Use API routes for all database operations
+- Implement proper error handling in API routes
+- Use database-only persistence
 
 ### Don'ts
 - Don't create deep nesting or excessive abstraction
@@ -85,11 +105,10 @@ src/
 - Don't import server-side modules on the client
 - Don't mix client and server state management
 - Don't create overly complex database schemas
+- Don't use local storage for persistence
+- Don't handle database operations on the client side
 
 ### Scaling
 - For small projects: keep everything simple, use this structure as-is
 - For medium projects: group related features, add feature-specific docs
 - For large projects: consider domain-based grouping, stricter guidelines, and more documentation
-
-    - Use proper headings
-    - Use proper lists

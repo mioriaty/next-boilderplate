@@ -17,12 +17,19 @@ approach balances Clean Architecture principles with practical development needs
 6. **Scalable Structure**: Easy to add new features without affecting existing ones
 7. **Server-Side Safety**: Database operations are server-side only with proper protection
 8. **Client-Side Simplicity**: Client stores focus on UI state, database operations via API routes
+9. **Database-Only Persistence**: All data saved to Supabase, no local storage dependencies
 
 ### 🏗️ **Directory Structure**
 
 ```
 src/
 ├── app/                   # Next.js App Router
+│   ├── api/              # API routes for database operations
+│   │   ├── todos/        # Todo API endpoints
+│   │   └── users/        # User API endpoints
+│   ├── clear-storage/    # Utility to clear local storage
+│   ├── test-todos/       # Test page for Supabase integration
+│   └── todos/            # Sample Supabase integration page
 ├── features/              # Feature-based organization
 │   ├── todos/             # Todo feature
 │   │   ├── components/    # Feature-specific UI components
@@ -36,6 +43,7 @@ src/
 │   ├── database/          # Database configuration and schemas
 │   │   ├── schemas/       # Domain-specific schemas
 │   │   ├── connection.ts  # Database connection (server-only)
+│   │   ├── supabase-client.ts # Supabase client configuration
 │   │   └── server-only.ts # Server-side utilities
 │   └── factories/         # Use case factories
 ├── services/              # Data access and external services
@@ -74,6 +82,31 @@ features/todos/
 - Group related functionality together
 - Test each feature independently
 - Keep client-side stores simple (no direct database access)
+- Use API routes for all database operations
+
+### 📁 **API Routes** (`src/app/api/`)
+
+Database operations via Next.js API routes:
+
+```
+app/api/
+├── todos/
+│   ├── route.ts           # GET /api/todos, POST /api/todos
+│   └── [id]/
+│       └── route.ts       # GET, PUT, DELETE, PATCH /api/todos/[id]
+└── users/
+    ├── route.ts           # User API endpoints
+    └── [id]/
+        └── route.ts       # Individual user operations
+```
+
+**Guidelines:**
+
+- Handle all database operations server-side
+- Use Supabase client for database access
+- Implement proper error handling
+- Return consistent JSON responses
+- Use TypeScript for type safety
 
 ### 📁 **Shared** (`src/shared/`)
 
@@ -89,6 +122,7 @@ shared/
 │   │   ├── users.ts      # User domain schema
 │   │   └── todos.ts      # Todo domain schema
 │   ├── connection.ts     # Database connection (server-only)
+│   ├── supabase-client.ts # Supabase client configuration
 │   └── server-only.ts    # Server-side utilities
 └── factories/            # Use case factories
     ├── todo-factory.ts   # Todo use case factories
@@ -155,6 +189,7 @@ src/shared/database/
 │   ├── users.ts          # User domain schema
 │   └── todos.ts          # Todo domain schema
 ├── connection.ts          # Database connection (server-only)
+├── supabase-client.ts    # Supabase client configuration
 └── server-only.ts        # Server-side utilities
 ```
 
@@ -185,6 +220,93 @@ export function createTodoUseCaseFactory() {
   const todoRepository = new DrizzleTodoRepository();
   return (data: CreateTodoData) => createTodoUseCase({ todoRepository }, data);
 }
+```
+
+## API Routes Pattern
+
+### 📡 **Database Operations via API Routes**
+
+```typescript
+// src/app/api/todos/route.ts
+import { createServerClient } from '@/shared/database/supabase-client';
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = createServerClient();
+    const { data: todos, error } = await supabase.from('todos').select('*').order('created_at', { ascending: false });
+
+    if (error) {
+      return NextResponse.json({ error: 'Failed to fetch todos' }, { status: 500 });
+    }
+
+    return NextResponse.json(todos);
+  } catch (error) {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = createServerClient();
+    const body = await request.json();
+
+    const { data: todo, error } = await supabase.from('todos').insert(body).select().single();
+
+    if (error) {
+      return NextResponse.json({ error: 'Failed to create todo' }, { status: 500 });
+    }
+
+    return NextResponse.json(todo, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+```
+
+## State Management Pattern
+
+### 🔄 **Client-Side State Management**
+
+```typescript
+// Feature-specific store (client-side only, no local storage)
+export const useTodoStore = create<TodoStore>((set, get) => ({
+  todos: [],
+  isLoading: false,
+  error: null,
+
+  // Load todos from API
+  loadTodos: async (filters?: TodoFilters) => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await fetch(`/api/todos?${params.toString()}`);
+      const todos = await response.json();
+      set({ todos, isLoading: false });
+    } catch (error) {
+      set({ error: error.message, isLoading: false });
+    }
+  },
+
+  // Create todo via API
+  createTodo: async (data: CreateTodoData) => {
+    try {
+      set({ isLoading: true, error: null });
+      const response = await fetch('/api/todos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const newTodo = await response.json();
+      set((state) => ({
+        todos: [newTodo, ...state.todos],
+        isLoading: false
+      }));
+    } catch (error) {
+      set({ error: error.message, isLoading: false });
+    }
+  }
+  // ... other actions
+}));
 ```
 
 ## Development Patterns
@@ -238,11 +360,24 @@ export function createTodoUseCaseFactory() {
    ```typescript
    // src/features/new-feature/store.ts
    export const useNewFeatureStore = create<NewFeatureStore>((set) => ({
-     // Client-side state only
+     // Client-side state only, API calls for persistence
    }));
    ```
 
-6. **Create Components**:
+6. **Create API Routes**:
+
+   ```typescript
+   // src/app/api/new-feature/route.ts
+   export async function GET() {
+     // Handle GET requests
+   }
+
+   export async function POST(request: NextRequest) {
+     // Handle POST requests
+   }
+   ```
+
+7. **Create Components**:
    ```typescript
    // src/features/new-feature/components/new-feature-form.tsx
    export function NewFeatureForm() {
@@ -272,25 +407,6 @@ export async function createTodoUseCase(
 }
 ```
 
-### 🔄 **State Management Pattern**
-
-```typescript
-// Feature-specific store (client-side only)
-export const useTodoStore = create<TodoStore>((set, get) => ({
-  todos: [],
-  isLoading: false,
-  error: null,
-
-  // Actions (client-side only)
-  setTodos: (todos) => set({ todos }),
-  addTodo: (todo) =>
-    set((state) => ({
-      todos: [...state.todos, todo]
-    }))
-  // ... other actions
-}));
-```
-
 ### 🧪 **Testing Pattern**
 
 ```typescript
@@ -309,31 +425,6 @@ describe('createTodoUseCase', () => {
 });
 ```
 
-## API Routes Pattern
-
-### 📡 **Database Operations via API Routes**
-
-```typescript
-// src/app/api/todos/route.ts
-import { createTodoUseCaseFactory } from '@/shared/factories/todo-factory';
-
-export async function POST(request: Request) {
-  try {
-    const data = await request.json();
-    const createTodo = createTodoUseCaseFactory();
-    const result = await createTodo(data);
-
-    if (result.success) {
-      return Response.json(result.data);
-    } else {
-      return Response.json({ error: result.error.message }, { status: 400 });
-    }
-  } catch (error) {
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-```
-
 ## Migration Guide
 
 ### From Clean Architecture to Hybrid
@@ -344,6 +435,8 @@ export async function POST(request: Request) {
 4. **Move Models**: `src/entities/models/` → `src/models/`
 5. **Update Imports**: Update all import paths to reflect new structure
 6. **Add Server-Side Protection**: Use `serverOnly()` for database operations
+7. **Create API Routes**: Move database operations to Next.js API routes
+8. **Remove Local Storage**: Use database-only persistence
 
 ### Benefits of Migration
 
@@ -352,6 +445,7 @@ export async function POST(request: Request) {
 - **Reduced Complexity**: Less abstraction layers
 - **Improved Developer Experience**: More intuitive structure
 - **Server-Side Safety**: Proper separation of client and server concerns
+- **Database-Only Persistence**: All data saved to Supabase, no local storage
 
 ## Best Practices
 
@@ -367,6 +461,8 @@ export async function POST(request: Request) {
 - Separate client and server concerns
 - Use server-only utilities for database operations
 - Organize schemas by domain
+- Use API routes for all database operations
+- Implement proper error handling in API routes
 
 ### ❌ **Don'ts**
 
@@ -379,6 +475,8 @@ export async function POST(request: Request) {
 - Don't import server-side modules on the client
 - Don't mix client and server state management
 - Don't create overly complex database schemas
+- Don't use local storage for persistence
+- Don't handle database operations on the client side
 
 ## Scaling Considerations
 
@@ -409,3 +507,4 @@ The hybrid architecture provides a balanced approach that:
 - Enables easy testing and maintenance
 - Properly separates client and server concerns
 - Ensures database operations are server-side only
+- Uses database-only persistence for data integrity
